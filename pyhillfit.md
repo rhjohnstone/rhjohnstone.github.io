@@ -18,4 +18,8 @@ $$
 
 which we call the _dose-response model_.
 
-See Equation \eqref{dose-response-model}.
+A dataset (not set in the pure maths sense --- repeats are allowed!) is of the form
+$$
+\{ (x_1, y_1), (x_2, y_2), \dots, (x_n, y_n)\},
+$$
+where _x<sub>i</sub>_ is the _i_<sup>th</sup> experimentally-applied drug concentration, and _y<sub>i</sub>_ is the _i_<sup>th</sup> experimentally-observed percentage block. Often, the same concentrations will be repeated, so there will be repeats of _x<sub>i</sub>_ values with (probably) different corresponding _y<sub>i</sub>_ values.
