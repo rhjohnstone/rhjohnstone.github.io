@@ -6,7 +6,8 @@ permalink: /pyhillfit/
 
 A heart cell's behaviour is influenced by the different ion (e.g. sodium, potassium, etc.) currents flowing into and out of the cell across its membrane.
 As part of the drug cardiac safety assessment process, drugs are applied to specially-engineered cells that allow the drug's effect on a particular ion current of interest to be measured.
-Typically, the reduction of the ion current, as a percentage, is recorded.
+Most of the drugs considered reduce the flow of particular ions by physically blocking these particular ion channels.
+During _ion channel screening_, the reduction of a particular ion current, as a percentage, is recorded.
 
 One of the simplest mathematical models describing ion channel blocking is a sigmoid ("S"-shaped) function called a _Hill curve_, which is defined by two parameters:
 1. IC<sub>50</sub> value --- the concentration at which the ion current is 50% blocked, and
