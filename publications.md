@@ -6,7 +6,7 @@ permalink: /publications/
 
 Lei CL, Wang K, Clerx M, __Johnstone RH__, Hortigon-Vinagre MP, Zamora V, Allan A, Smith GL, Gavaghan DJ, Mirams GR, Polonchuk L, 2017.  
 [Tailoring mathematical models to stem-cell derived cardiomyocyte lines can improve predictions of drug-induced changes to their electrophysiology.](http://dx.doi.org/10.3389/fphys.2017.00986)  
-Frontiers in physiology. 8.
+Frontiers in Physiology. 8.
 
 __Johnstone RH__, Bardenet R, Gavaghan DJ and Mirams GR, 2017.  
 [Hierarchical Bayesian inference for ion channel screening dose-response data.](http://dx.doi.org/10.12688/wellcomeopenres.9945.2)  
