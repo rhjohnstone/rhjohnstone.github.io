@@ -10,6 +10,9 @@ source "https://rubygems.org"
 # Happy Jekylling!
 gem "jekyll", "~> 3.7.3"
 
+# RJ
+gem "jekyll-sitemap"
+
 # This is the default theme for new Jekyll sites. You may change this to anything you like.
 gem "minima"
 
