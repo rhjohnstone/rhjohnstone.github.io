@@ -21,7 +21,7 @@ $$
 
 which we call the _dose-response model_.
 
-A dataset (not set in the pure maths sense --- repeats are allowed!) is of the form
+A dataset is of the form
 $$
 \{ (x_1, y_1), (x_2, y_2), \dots, (x_n, y_n)\},
 $$

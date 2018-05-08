@@ -14,4 +14,4 @@ Wellcome Open Research. 1, 6.
 
 __Johnstone RH__, Chang ET, Bardenet R, de Boer TP, Gavaghan DJ, Pathmanathan P, Clayton RH and Mirams GR, 2016.  
 [Uncertainty and variability in models of the cardiac action potential: Can we build trustworthy models?](http://dx.doi.org/10.1016/j.yjmcc.2015.11.018)  
-Journal of Molecular and Cellular Cardiology. 96, 49-62.
+Journal of Molecular and Cellular Cardiology. 96, 49--62.
