@@ -23,7 +23,7 @@ The solution, as is so often the case in mathematics, is beautiful in its simpli
 
 That is not a typo.
 
-As we know, standard matrix multiplication is $O(n^3)$, because we have $n^2^ mini-jobs, each consisting of $n$ multiplcations.
+As we know, standard matrix multiplication is $O(n^3)$, because we have $n^2$ mini-jobs, each consisting of $n$ multiplcations.
 The key insight was that we can dispatch each of these $n^2$ jobs to their own instance to be computed _in parallel_.
 
 That is also not a typo.
