@@ -6,7 +6,7 @@ title:  "O(n) Matrix Multiplication with Lightning Apps"
 # $O(n)$ Matrix Multiplication with Lightning Apps
 
 One of the biggest bottlenecks in modern machine learning is matrix multiplication.
-Think about it: a square $$n \times n$$ matrix has $n$ rows and $n$ columns.
+Think about it: a square $n \times n$ matrix has $n$ rows and $n$ columns.
 When we want to multiply two of these matrices together, we have to take the "inner" product (or dot "product") of every row of one with every column of the other.
 So that's $n^2$ multiplications, right?
 No!
