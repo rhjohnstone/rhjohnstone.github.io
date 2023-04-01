@@ -21,7 +21,7 @@ The solution, as is so often the case in mathematics, is beautiful in its simpli
 
 That is not a typo.
 
-As we know, standard matrix multiplication is _O(n³)_, because we have _n²_ mini-jobs, each consisting of _n_ multiplcations.
+As we know, standard matrix multiplication is _O(n³)_, because we have _n²_ mini-jobs, each consisting of _n_ multiplications.
 The key insight was that we can dispatch each of these _n²_ jobs to their own instance to be computed _in parallel_.
 
 That is also not a typo.
