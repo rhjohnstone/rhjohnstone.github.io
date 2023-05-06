@@ -1,5 +1,4 @@
 ---
-layout: single
 title:  "O(n) Matrix Multiplication with Lightning Apps"
 ---
 
