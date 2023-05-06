@@ -1,7 +1,12 @@
 remote_theme: "mmistakes/minimal-mistakes@4.24.0"
 title: Uncountable ideas, enumerated
 description: Making computers useful
-author: Ross Johnstone
+
+author:
+  name     : "Ross H. Johnstone"
+  # avatar   : "/assets/images/bio-photo.jpg"
+  bio      : "Mathematician and machine learning engineer."
+  location : "Tokyo, Japan"
 
 plugins:
   - jekyll-include-cache
