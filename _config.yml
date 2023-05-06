@@ -33,6 +33,7 @@ defaults:
       read_time: true
       share: true
       show_date: true
+      baseurl: /blog
   # _pages
   - scope:
       path: ""
@@ -47,4 +48,3 @@ atom_feed:
 include: ["_pages"]
 paginate: 5
 paginate_path: /blog/page:num
-permalink: /blog/:year/:month/:day/:title:output_ext
