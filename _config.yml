@@ -33,6 +33,7 @@ defaults:
       read_time: true
       share: true
       show_date: true
+      permalink: /blog/:year/:month/:day/:title:output_ext
   # _pages
   - scope:
       path: ""
