@@ -33,7 +33,6 @@ defaults:
       read_time: true
       share: true
       show_date: true
-      baseurl: /blog
   # _pages
   - scope:
       path: ""
