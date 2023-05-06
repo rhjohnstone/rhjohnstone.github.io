@@ -7,6 +7,13 @@ author:
   # avatar   : "/assets/images/bio-photo.jpg"
   bio      : "Mathematician and machine learning engineer."
   location : "Tokyo, Japan"
+  links:
+    - label: "Email"
+      icon: "fas fa-fw fa-envelope-square"
+      url: "mailto:contact@rossjohnst.one"
+    - label: "GitHub"
+      icon: "fab fa-fw fa-github"
+      url: "https://github.com/rhjohnstone"
 
 plugins:
   - jekyll-include-cache
