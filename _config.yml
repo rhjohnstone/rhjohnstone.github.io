@@ -45,4 +45,4 @@ atom_feed:
   hide: true
 
 include: ["_pages"]
-paginate_path: /blog/page:num
+paginate_path: /blog/page:5
