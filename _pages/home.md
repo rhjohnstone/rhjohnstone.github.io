@@ -1,3 +1,4 @@
 ---
+layout: splash
 permalink: /
 ---
