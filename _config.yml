@@ -40,3 +40,6 @@ defaults:
 
 atom_feed:
   hide: true
+
+include: ["_pages"]
+
