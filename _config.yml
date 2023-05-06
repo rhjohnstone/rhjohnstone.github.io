@@ -1,4 +1,4 @@
-theme: minimal
+remote_theme: "mmistakes/minimal-mistakes@4.24.0"
 title: Uncountable ideas, enumerated
 description: Making computers useful
 author: Ross Johnstone
