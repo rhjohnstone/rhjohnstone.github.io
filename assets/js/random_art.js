@@ -1,6 +1,4 @@
-const canvas = document.createElement('canvas');
-canvas.width = 800;
-canvas.height = 800;
+const canvas = document.getElementById('myCanvas');
 const ctx = canvas.getContext('2d');
 
 // define a list of colors
@@ -28,5 +26,3 @@ for (let i = 0; i < 1000; i++) {
     ctx.lineWidth = line_width;
     ctx.stroke();
 }
-
-document.body.appendChild(canvas);
