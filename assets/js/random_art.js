@@ -1,6 +1,6 @@
 const canvas = document.createElement('canvas');
-canvas.width = 200;
-canvas.height = 200;
+canvas.width = 800;
+canvas.height = 800;
 const ctx = canvas.getContext('2d');
 
 // define a list of colors
