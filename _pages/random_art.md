@@ -4,3 +4,5 @@ permalink: /random_art/
 ---
 
 <script src="{{ base.url | prepend: site.url }}/assets/random_art.js"></script>
+
+<canvas id="myCanvas"></canvas>
