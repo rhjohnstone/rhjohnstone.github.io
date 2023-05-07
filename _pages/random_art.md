@@ -6,3 +6,7 @@ page_js:
 ---
 
 Enjoy some random art:
+
+<canvas id="myCanvas"></canvas>
+
+Did it work?
