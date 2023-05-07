@@ -1,6 +1,6 @@
 const canvas = document.createElement('canvas');
-canvas.width = 800;
-canvas.height = 800;
+canvas.width = 200;
+canvas.height = 200;
 const ctx = canvas.getContext('2d');
 
 // define a list of colors
@@ -15,10 +15,10 @@ for (let i = 0; i < 1000; i++) {
     const line_width = Math.floor(Math.random() * 20) + 1;
 
     // set random line coordinates
-    const x1 = Math.floor(Math.random() * 800);
-    const y1 = Math.floor(Math.random() * 800);
-    const x2 = Math.floor(Math.random() * 800);
-    const y2 = Math.floor(Math.random() * 800);
+    const x1 = Math.floor(Math.random() * canvas.width);
+    const y1 = Math.floor(Math.random() * canvas.height);
+    const x2 = Math.floor(Math.random() * canvas.width);
+    const y2 = Math.floor(Math.random() * canvas.height);
 
     // draw random line
     ctx.beginPath();
