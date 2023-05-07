@@ -1,7 +1,8 @@
 ---
 title: Random art
 permalink: /random_art/
-customjs: /assets/js/random_art.js
+page_js:
+  - /path/to/your/custom.js
 ---
 
 Enjoy some random art:
