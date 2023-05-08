@@ -5,5 +5,5 @@ permalink: /random_art/
 
 Refresh the page to generate a new masterpiece (courtesy of ChatGPT)!
 
-<canvas id="myCanvas" width="{{screen.width}}" height="{{screen.width}}"></canvas>
+<canvas id="myCanvas" width="500" height="500"></canvas>
 <script src="/assets/js/random_art.js"></script>
