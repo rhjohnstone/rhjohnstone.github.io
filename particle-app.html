@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Particle Cloud Visualizer - Extreme Edition</title>
+    <style>
+        body { margin: 0; overflow: hidden; font-family: Arial, sans-serif; background-color: #0c0c0c; color: #eee; }
+        #scene-container { width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; }
+        #controls {
+            position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.85); /* Darker, more opaque */
+            padding: 15px; border-radius: 8px; display: flex; flex-direction: column;
+            gap: 10px; z-index: 10; max-width: 340px; /* Wider still */
+            max-height: 95vh; overflow-y: auto;
+        }
+        #controls label { display: block; margin-bottom: 5px; font-size: 0.9em; }
+        #controls input[type="range"], #controls input[type="color"], #controls button, #controls select {
+            width: 100%; box-sizing: border-box; margin-bottom: 10px;
+        }
+        #controls button {
+            padding: 8px 12px; background-color: #3a3a3a; color: white; border: none; /* Darker buttons */
+            border-radius: 4px; cursor: pointer; transition: background-color 0.3s;
+        }
+        #controls button:hover { background-color: #505050; }
+        #controls .shape-buttons button { margin-bottom: 5px; }
+        .control-group { border: 1px solid #282828; padding: 10px; border-radius: 5px; margin-bottom:10px; }
+        .control-group h4 { margin-top: 0; margin-bottom: 10px; color: #bbb; } /* Lighter heading */
+        .checkbox-label { display: flex; align-items: center; font-size: 0.9em; margin-bottom: 8px; }
+        .checkbox-label input[type="checkbox"] { margin-right: 8px; width: auto; }
+    </style>
+</head>
+<body>
+    <div id="scene-container"></div>
+
+    <div id="controls">
+        <div class="control-group">
+            <h4>Geometric Shapes</h4>
+            <div class="shape-buttons">
+                <button id="sphereBtn">Sphere</button> <button id="cubeBtn">Cube</button> <button id="torusBtn">Torus</button>
+                <button id="planeBtn">Plane</button> <button id="cylinderBtn">Cylinder</button> <button id="coneBtn">Cone</button>
+                <button id="helixBtn">Helix</button> <button id="torusKnotBtn">Torus Knot</button>
+            </div>
+        </div>
+        <div class="control-group">
+            <h4>Organic & Strange Shapes</h4>
+            <div class="shape-buttons">
+                <button id="lumpySphereBtn">Lumpy Sphere</button> <button id="lorenzAttractorBtn">Lorenz Attractor</button>
+                <button id="galaxySpiralBtn">Galaxy Spiral</button>
+            </div>
+        </div>
+        <div class="control-group">
+            <h4>Mathematical & Artistic Shapes</h4>
+            <div class="shape-buttons">
+                <button id="nautilusShellBtn">Nautilus Shell</button> <button id="dinisSurfaceBtn">Dini's Surface</button>
+                <button id="schwarzPBtn">Schwarz P Cloud</button> <button id="trefoilKnotBtn">Trefoil Knot Tube</button>
+                <button id="vivianiCurveBtn">Viviani's Curve</button> <button id="mobiusBandBtn">Mobius Band</button>
+                <button id="kleinBottleCloudBtn">Klein Bottle Cloud</button> <button id="conchShellBtn">Conch Shell</button>
+                <button id="figureEightKnotCloudBtn">Fig-8 Knot Cloud</button> <button id="gyroidCloudBtn">Gyroid Cloud</button>
+                <button id="helicoidBtn">Helicoid</button> <button id="catenoidBtn">Catenoid</button>
+            </div>
+        </div>
+        <div class="control-group">
+            <h4>More Fractals & Algorithmic</h4>
+            <div class="shape-buttons">
+                 <button id="randomWalkCloudBtn">Random Walk</button> <button id="branchingCloudBtn">Branching Cloud</button>
+                 <button id="sierpinskiTetrahedronBtn">Sierpinski Tetrahedron</button>
+                 <button id="mandelbulbCloudBtn">Mandelbulb Cloud</button>
+                 <button id="mengerSpongeCloudBtn">Menger Sponge Cloud</button>
+                 <button id="barnsleyFernCloudBtn">Barnsley Fern Cloud</button>
+                 <button id="aizawaAttractorBtn">Aizawa Attractor</button>
+                 <button id="lSystemTreeBtn">L-System Tree</button>
+                 <button id="juliaSetCloudBtn">Julia Set Cloud</button>
+                 <button id="hopalongAttractorBtn">Hopalong Attractor</button>
+                 <button id="deJongAttractorBtn">De Jong Attractor</button>
+            </div>
+        </div>
+        <div class="control-group">
+            <h4>Properties</h4>
+            <label for="particleCount">Particle Count: <span id="particleCountValue">10000</span></label>
+            <input type="range" id="particleCount" min="100" max="20000" value="10000" step="100">
+            <label for="particleSize">Particle Size: <span id="particleSizeValue">0.2</span></label>
+            <input type="range" id="particleSize" min="0.1" max="10" value="0.2" step="0.1">
+            <label for="particleColor">Particle Color:</label>
+            <input type="color" id="particleColor" value="#00ffdd">
+            <label class="checkbox-label"><input type="checkbox" id="rainbowMode"> Rainbow Mode</label>
+        </div>
+        <div class="control-group">
+            <h4>Animation & Flair</h4>
+            <label for="animationSpeed">Transition Speed (ms): <span id="animationSpeedValue">1500</span></label>
+            <input type="range" id="animationSpeed" min="100" max="5000" value="1500" step="100">
+            <label class="checkbox-label"><input type="checkbox" id="transitionFlair" checked> Transition Flair</label>
+            <button id="shuffleBtn">Shuffle Particles</button>
+        </div>
+        <button id="resetViewBtn">Reset Camera</button>
+    </div>
+
+    <script type="importmap">
+    { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/", "animejs": "https://unpkg.com/animejs@3.2.1/lib/anime.es.js" } }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import anime from 'animejs';
+
+        // --- Global Variables (condensed for brevity) ---
+        let scene, camera, renderer, particles, controls;
+        let particleGeometry, particleMaterial;
+        let currentShape = 'sphere'; let particleCount = 10000; let particleSize = 0.2;  
+        let particleColor = new THREE.Color(0x00ffdd); let animationDuration = 1500;
+        let rainbowModeActive = false; let transitionFlairActive = true; let hue = 0;
+        let isInitialAnimationDone = false; const introAnimationDuration = 2500; const introScatterFactor = 60; 
+        const particleCountValueSpan = document.getElementById('particleCountValue');
+        const particleSizeValueSpan = document.getElementById('particleSizeValue');
+        const animationSpeedValueSpan = document.getElementById('animationSpeedValue');
+        
+        // --- Caches for procedural/iterative shapes ---
+        let lorenzPointsCache = []; let lorenzCacheParticleCount = 0;
+        let randomWalkPointsCache = []; let randomWalkCacheParticleCount = 0;
+        let branchingPointsCache = []; let branchingCacheParticleCount = 0;
+        let sierpinskiTetrahedronCache = []; let sierpinskiTetrahedronCacheCount = 0;
+        let mandelbulbCloudCache = []; let mandelbulbCloudCacheCount = 0;
+        let mengerSpongeCache = []; let mengerSpongeCacheCount = 0;
+        let barnsleyFernCache = []; let barnsleyFernCacheCount = 0;
+        let aizawaAttractorCache = []; let aizawaAttractorCacheCount = 0;
+        let lSystemTreeCache = []; let lSystemTreeCacheCount = 0;
+        let juliaSetCache = []; let juliaSetCacheCount = 0; let juliaSetCacheC = null; // Cache Julia C param too
+        let hopalongAttractorCache = []; let hopalongAttractorCacheCount = 0;
+        let deJongAttractorCache = []; let deJongAttractorCacheCount = 0;
+
+
+        function createParticleTexture() { /* ... (same) ... */ const canvas = document.createElement('canvas'); canvas.width = 32; canvas.height = 32; const context = canvas.getContext('2d'); const gradient = context.createRadialGradient(16, 16, 0, 16, 16, 16); gradient.addColorStop(0, 'rgba(255,255,255,1)'); gradient.addColorStop(0.2, 'rgba(255,255,255,0.8)'); gradient.addColorStop(0.8, 'rgba(255,255,255,0.2)'); gradient.addColorStop(1, 'rgba(255,255,255,0)'); context.fillStyle = gradient; context.fillRect(0, 0, 32, 32); return new THREE.CanvasTexture(canvas); }
+        const particleTexture = createParticleTexture();
+
+        function init() { /* ... (same, with UI init for sliders) ... */ scene = new THREE.Scene(); camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000); camera.position.z = 35; const container = document.getElementById('scene-container'); renderer = new THREE.WebGLRenderer({ antialias: true }); renderer.setSize(window.innerWidth, window.innerHeight); renderer.setPixelRatio(window.devicePixelRatio); container.appendChild(renderer.domElement); controls = new OrbitControls(camera, renderer.domElement); controls.enableDamping = true; controls.dampingFactor = 0.05; controls.minDistance = 1; controls.maxDistance = 250; /* Increased max distance further */ particleCountValueSpan.textContent = particleCount; document.getElementById('particleCount').value = particleCount; particleSizeValueSpan.textContent = particleSize.toFixed(1); document.getElementById('particleSize').value = particleSize; createParticles(); if (!isInitialAnimationDone) { const introFinalTargets = []; for (let i = 0; i < particleCount; i++) { introFinalTargets.push(getPointInShape(currentShape, i, particleCount)); } animateParticlesToTargets( introFinalTargets, introAnimationDuration, () => { isInitialAnimationDone = true; }, 'easeOutExpo' ); } setupUIControls(); window.addEventListener('resize', onWindowResize); animate(); }
+        function createParticles() { /* ... (same) ... */ if (particles) { scene.remove(particles); particleGeometry.dispose(); } particleGeometry = new THREE.BufferGeometry(); const positions = new Float32Array(particleCount * 3); const targetPositions = []; for (let i = 0; i < particleCount; i++) { const finalShapePosition = getPointInShape(currentShape, i, particleCount); if (!isInitialAnimationDone) { const sx = (Math.random() - 0.5) * introScatterFactor; const sy = (Math.random() - 0.5) * introScatterFactor; const sz = (Math.random() - 0.5) * introScatterFactor; positions[i * 3] = sx; positions[i * 3 + 1] = sy; positions[i * 3 + 2] = sz; targetPositions.push({ x: sx, y: sy, z: sz }); } else { positions[i * 3] = finalShapePosition.x; positions[i * 3 + 1] = finalShapePosition.y; positions[i * 3 + 2] = finalShapePosition.z; targetPositions.push({ x: finalShapePosition.x, y: finalShapePosition.y, z: finalShapePosition.z }); } } particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3)); particleGeometry.userData.targetPositions = targetPositions; if (!particleMaterial) { particleMaterial = new THREE.PointsMaterial({ size: particleSize, color: particleColor.clone(), map: particleTexture, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, sizeAttenuation: true, }); } else { particleMaterial.size = particleSize; if (!rainbowModeActive) { particleMaterial.color.set(particleColor); } } particles = new THREE.Points(particleGeometry, particleMaterial); scene.add(particles); }
+        
+        // --- CACHED POINT GENERATION FUNCTIONS (Lorenz, RandomWalk, Branching - same as before) ---
+        function getLorenzPoints(numPoints) { /* ... (same as before) ... */ if (lorenzPointsCache.length >= numPoints && lorenzCacheParticleCount === numPoints) { return lorenzPointsCache.slice(0, numPoints); } const points = []; let x = 0.1, y = 0, z = 0; const a = 10, b = 28, c = 8.0 / 3.0; const dt = 0.01; for (let i = 0; i < 100; i++) { const dx = a * (y - x) * dt; const dy = (x * (b - z) - y) * dt; const dz = (x * y - c * z) * dt; x += dx; y += dy; z += dz; } for (let i = 0; i < numPoints; i++) { const dx = a * (y - x) * dt; const dy = (x * (b - z) - y) * dt; const dz = (x * y - c * z) * dt; x += dx; y += dy; z += dz; points.push({ x: x * 0.5, y: y * 0.5, z: (z - 25) * 0.5 }); } lorenzPointsCache = points; lorenzCacheParticleCount = numPoints; return points;}
+        function getRandomWalkPoints(numPoints) { /* ... (same as before) ... */ if (randomWalkPointsCache.length >= numPoints && randomWalkCacheParticleCount === numPoints) { return randomWalkPointsCache.slice(0, numPoints); } const points = []; let p = new THREE.Vector3(0,0,0); const stepSize = 0.5; for(let i=0; i<numPoints; i++) { p.x += (Math.random() - 0.5) * stepSize; p.y += (Math.random() - 0.5) * stepSize; p.z += (Math.random() - 0.5) * stepSize; points.push({x: p.x, y: p.y, z: p.z}); } let min = new THREE.Vector3(Infinity,Infinity,Infinity); let max = new THREE.Vector3(-Infinity,-Infinity,-Infinity); points.forEach(pt => { min.min(pt); max.max(pt); }); const center = new THREE.Vector3().addVectors(min,max).multiplyScalar(0.5); const size = new THREE.Vector3().subVectors(max,min); const scaleFactor = 20 / Math.max(size.x, size.y, size.z, 1); randomWalkPointsCache = points.map(pt => ({ x: (pt.x - center.x) * scaleFactor, y: (pt.y - center.y) * scaleFactor, z: (pt.z - center.z) * scaleFactor, })); randomWalkCacheParticleCount = numPoints; return randomWalkPointsCache; }
+        function getBranchingPoints(numPoints) { /* ... (same as before) ... */ if (branchingPointsCache.length >= numPoints && branchingCacheParticleCount === numPoints) { return branchingPointsCache.slice(0, numPoints); } const points = []; let branches = [{ pos: new THREE.Vector3(0, -10, 0), dir: new THREE.Vector3(0, 1, 0), life: 150, gen: 0 }]; const maxGen = 5; const branchProb = 0.05; const segmentLength = 0.3; while(points.length < numPoints && branches.length > 0) { const branch = branches.shift(); for(let i=0; i < branch.life && points.length < numPoints; i++) { branch.pos.addScaledVector(branch.dir, segmentLength); points.push({ x: branch.pos.x, y: branch.pos.y, z: branch.pos.z }); if (branch.gen < maxGen && Math.random() < branchProb) { for(let j=0; j< (Math.random() < 0.3 ? 1 : 2) ; j++) { const newDir = branch.dir.clone().applyAxisAngle( new THREE.Vector3(Math.random()-0.5,Math.random()-0.5,Math.random()-0.5).normalize(), (Math.random() - 0.5) * Math.PI / 3 ).normalize(); branches.push({ pos: branch.pos.clone(), dir: newDir, life: Math.max(20, branch.life * (0.6 + Math.random()*0.3)), gen: branch.gen + 1 }); } break; } if (points.length >= numPoints) break; } branches.sort((a,b) => a.gen - b.gen); } while(points.length < numPoints && points.length > 0) { points.push({...points[points.length-1]}); } if(points.length === 0 && numPoints > 0) { for(let k=0; k<numPoints; k++) points.push({x:0,y:0,z:0});} branchingPointsCache = points; branchingCacheParticleCount = numPoints; return branchingPointsCache;}
+        function getSierpinskiTetrahedronPoints(numPoints) { /* ... (same as before) ... */ if (sierpinskiTetrahedronCache.length >= numPoints && sierpinskiTetrahedronCacheCount === numPoints) { return sierpinskiTetrahedronCache.slice(0, numPoints); } const points = []; const s = 10; const vertices = [new THREE.Vector3(s,s,s),new THREE.Vector3(-s,-s,s),new THREE.Vector3(-s,s,-s),new THREE.Vector3(s,-s,-s)]; let p = new THREE.Vector3(Math.random(),Math.random(),Math.random()); for(let i=0;i<numPoints+100;i++){ const r=Math.floor(Math.random()*4); p.lerp(vertices[r],0.5); if(i>=100){points.push({x:p.x,y:p.y,z:p.z});}} sierpinskiTetrahedronCache=points; sierpinskiTetrahedronCacheCount=numPoints; return points;}
+        function getMandelbulbCloudPoints(numPoints, power = 8, maxIterations = 15, bailout = 4) { /* ... (same as before) ... */ if (mandelbulbCloudCache.length >= numPoints && mandelbulbCloudCacheCount === numPoints) { return mandelbulbCloudCache.slice(0, numPoints); } const points = []; const bound = 1.5; let attempts = 0; const maxAttemptsFactor = 100; while (points.length < numPoints && attempts < numPoints * maxAttemptsFactor) { attempts++; const cx = (Math.random()*2-1)*bound; const cy = (Math.random()*2-1)*bound; const cz = (Math.random()*2-1)*bound; const cVec = new THREE.Vector3(cx,cy,cz); let zVec = cVec.clone(); let iteration = 0; while (iteration < maxIterations) { const r = zVec.length(); if (r > bailout) break; let phi = Math.atan2(zVec.y,zVec.x); let theta = Math.atan2(Math.sqrt(zVec.x*zVec.x+zVec.y*zVec.y),zVec.z); const r_pow_n = Math.pow(r,power); phi = phi*power; theta = theta*power; zVec.x = r_pow_n*Math.sin(theta)*Math.cos(phi); zVec.y = r_pow_n*Math.sin(theta)*Math.sin(phi); zVec.z = r_pow_n*Math.cos(theta); zVec.add(cVec); iteration++; } if (iteration === maxIterations) { points.push({x:cx*10,y:cy*10,z:cz*10});}} while(points.length < numPoints && points.length > 0) points.push({...points[points.length-1]}); if(points.length === 0 && numPoints > 0) for(let k=0; k<numPoints; k++) points.push({x:0,y:0,z:0}); mandelbulbCloudCache = points; mandelbulbCloudCacheCount = numPoints; return points; }
+
+        // --- NEW FRACTAL/ALGORITHMIC GENERATION HELPERS ---
+        function getMengerSpongeCloudPoints(numPoints, iterations = 3) { // Iterations: 3 is reasonable, 4 gets dense & slow
+            if (mengerSpongeCache.length >= numPoints && mengerSpongeCacheCount === numPoints) {
+                return mengerSpongeCache.slice(0, numPoints);
+            }
+            const points = [];
+            const s = 15; // Overall size
+            let p = new THREE.Vector3(Math.random()*s - s/2, Math.random()*s - s/2, Math.random()*s - s/2);
+
+            for (let iter = 0; iter < numPoints + 500; iter++) { // Warm-up
+                const choice = Math.floor(Math.random() * 20); // 20 transformations for Menger Sponge
+                let newX, newY, newZ;
+                // Apply one of the 20 affine transformations
+                // This is a simplified IFS specific to Menger. A general IFS framework would be more complex.
+                // Each transformation scales by 1/3 and translates to one of the 20 smaller cube positions.
+                const offset = (val) => (val + s/3) * (1/3) - s/2; // Scale and recenter a coordinate
+                
+                let ix = choice % 3;
+                let iy = Math.floor(choice / 3) % 3;
+                let iz = Math.floor(choice / 9); // Will be 0 or 1 or 2.  We need 20, so this logic is off.
+                                                // Menger IFS: scale by 1/3, translate to 20 positions out of 27.
+                                                // The 20 positions are those where at most one coordinate is 1 (center).
+
+                let tx = p.x * (1/3);
+                let ty = p.y * (1/3);
+                let tz = p.z * (1/3);
+
+                // Select one of the 20 sub-cubes
+                // This selection needs to be correct for Menger
+                let subX = Math.floor(Math.random()*3) - 1; // -1, 0, 1
+                let subY = Math.floor(Math.random()*3) - 1; // -1, 0, 1
+                let subZ = Math.floor(Math.random()*3) - 1; // -1, 0, 1
+
+                // Check if it's one of the 20 valid Menger sub-cubes (at most one coordinate is 0, others are -1 or 1)
+                let zeroCount = (subX===0?1:0) + (subY===0?1:0) + (subZ===0?1:0);
+                if (zeroCount > 1) { // Invalid sub-cube (center hole), reroll sub-cube choice
+                    iter--; // Redo this iteration
+                    continue;
+                }
+
+                p.x = tx + subX * (s/3);
+                p.y = ty + subY * (s/3);
+                p.z = tz + subZ * (s/3);
+                
+                if (iter >= 500) {
+                    points.push({ x: p.x, y: p.y, z: p.z });
+                }
+            }
+            mengerSpongeCache = points;
+            mengerSpongeCacheCount = numPoints;
+            return points;
+        }
+
+        function getBarnsleyFernCloudPoints(numPoints) {
+            if (barnsleyFernCache.length >= numPoints && barnsleyFernCacheCount === numPoints) {
+                return barnsleyFernCache.slice(0, numPoints);
+            }
+            const points = [];
+            let x = 0, y = 0;
+            const scaleFactor = 2.5; // Scale up the fern
+
+            for (let i = 0; i < numPoints + 100; i++) { // Warm-up
+                const r = Math.random();
+                let nextX, nextY;
+                if (r < 0.01) { // Stem
+                    nextX = 0;
+                    nextY = 0.16 * y;
+                } else if (r < 0.86) { // Successively smaller leaflets
+                    nextX = 0.85 * x + 0.04 * y;
+                    nextY = -0.04 * x + 0.85 * y + 1.6;
+                } else if (r < 0.93) { // Largest left-hand leaflet
+                    nextX = 0.20 * x - 0.26 * y;
+                    nextY = 0.23 * x + 0.22 * y + 1.6;
+                } else { // Largest right-hand leaflet
+                    nextX = -0.15 * x + 0.28 * y;
+                    nextY = 0.26 * x + 0.24 * y + 0.44;
+                }
+                x = nextX;
+                y = nextY;
+                if (i >= 100) {
+                    points.push({ x: x * scaleFactor, y: y * scaleFactor - 5 /* Center it */, z: (Math.random() - 0.5) * 0.5 /* Slight Z-depth */ });
+                }
+            }
+            barnsleyFernCache = points;
+            barnsleyFernCacheCount = numPoints;
+            return points;
+        }
+        
+        function getAizawaAttractorPoints(numPoints) {
+            if (aizawaAttractorCache.length >= numPoints && aizawaAttractorCacheCount === numPoints) {
+                return aizawaAttractorCache.slice(0, numPoints);
+            }
+            const points = [];
+            // Aizawa params
+            const a=0.95, b=0.7, c=0.6, d=3.5, e=0.25, f=0.1;
+            let x=0.1, y=0, z=0;
+            const dt = 0.02;
+            const scaleFactor = 10;
+
+            for (let i=0; i < numPoints + 200; i++) { // Warm-up
+                const dx = (z-b)*x - d*y;
+                const dy = d*x + (z-b)*y;
+                const dz = c + a*z - (z*z*z)/3 - (x*x + y*y)*(1 + e*z) + f*z*x*x*x;
+                x += dx * dt;
+                y += dy * dt;
+                z += dz * dt;
+                if (i >= 200) {
+                    points.push({x: x*scaleFactor, y: y*scaleFactor, z: z*scaleFactor});
+                }
+            }
+            aizawaAttractorCache = points;
+            aizawaAttractorCacheCount = numPoints;
+            return points;
+        }
+
+        function getLSystemTreePoints(numPoints, iterations = 4) { // Iterations: 3-5 reasonable
+            if (lSystemTreeCache.length >= numPoints && lSystemTreeCacheCount === numPoints) {
+                return lSystemTreeCache.slice(0, numPoints);
+            }
+            const points = [];
+            const axiom = "X";
+            const rules = {
+                "X": "F+[[X]-X]-F[-FX]+X", // A common bushy tree rule
+                "F": "FF"
+            };
+            let currentString = axiom;
+            for (let i = 0; i < iterations; i++) {
+                let nextString = "";
+                for (const char of currentString) {
+                    nextString += rules[char] || char;
+                }
+                currentString = nextString;
+                if (currentString.length > numPoints * 2 && points.length === 0) break; // Prevent overly long strings
+            }
+
+            let turtle = {
+                pos: new THREE.Vector3(0, -12, 0), // Start at bottom
+                dir: new THREE.Vector3(0, 1, 0),   // Pointing up
+                stack: []
+            };
+            const angle = 25 * Math.PI / 180; // Branch angle
+            const length = 0.8;                 // Segment length
+
+            function applyRule(char) {
+                if (char === "F") {
+                    const nextPos = turtle.pos.clone().addScaledVector(turtle.dir, length);
+                    // Interpolate points along the segment if needed for density
+                    const segments = Math.max(1, Math.floor(length / 0.5)); // at least 1 point per 0.5 unit
+                    for (let s=0; s < segments && points.length < numPoints; s++) {
+                        const interpPos = turtle.pos.clone().lerp(nextPos, (s+1)/segments);
+                        points.push({ x: interpPos.x, y: interpPos.y, z: interpPos.z });
+                    }
+                    turtle.pos.copy(nextPos);
+                } else if (char === "+") { // Turn left (yaw)
+                    turtle.dir.applyAxisAngle(new THREE.Vector3(0,0,1), angle * (0.8 + Math.random()*0.4));
+                } else if (char === "-") { // Turn right (yaw)
+                    turtle.dir.applyAxisAngle(new THREE.Vector3(0,0,1), -angle * (0.8 + Math.random()*0.4));
+                } else if (char === "&") { // Pitch down
+                    turtle.dir.applyAxisAngle(new THREE.Vector3(1,0,0), angle);
+                } else if (char === "^") { // Pitch up
+                    turtle.dir.applyAxisAngle(new THREE.Vector3(1,0,0), -angle);
+                } else if (char === "<") { // Roll left
+                     turtle.dir.applyAxisAngle(turtle.dir.clone().normalize(), angle); // This is not a standard roll
+                } else if (char === ">") { // Roll right
+                     turtle.dir.applyAxisAngle(turtle.dir.clone().normalize(), -angle); // This is not a standard roll
+                } else if (char === "[") {
+                    turtle.stack.push({ pos: turtle.pos.clone(), dir: turtle.dir.clone() });
+                } else if (char === "]") {
+                    const popped = turtle.stack.pop();
+                    if (popped) { turtle.pos.copy(popped.pos); turtle.dir.copy(popped.dir); }
+                }
+            }
+            for (const char of currentString) {
+                if (points.length >= numPoints) break;
+                applyRule(char);
+            }
+             while(points.length < numPoints && points.length > 0) points.push({...points[points.length-1]});
+             if(points.length === 0 && numPoints > 0) for(let k=0; k<numPoints; k++) points.push({x:0,y:-12+k*0.1,z:0}); // Failsafe vertical line
+
+
+            lSystemTreeCache = points;
+            lSystemTreeCacheCount = numPoints;
+            return points;
+        }
+
+        function getJuliaSetCloudPoints(numPoints, maxIter = 50, bailout = 2.0) {
+            // Pick a new random C for Julia set each time this shape is selected, unless cached
+            if (juliaSetCache.length >= numPoints && juliaSetCacheCount === numPoints && juliaSetCacheC) {
+                 // Use cached points if C is the same and count is sufficient
+                 return juliaSetCache.slice(0, numPoints);
+            }
+
+            const cRe = (Math.random() * 2 - 1) * 1.0; // Random C real part
+            const cIm = (Math.random() * 2 - 1) * 1.0; // Random C imaginary part
+            juliaSetCacheC = {re: cRe, im: cIm}; // Store C for caching check
+
+            const points = [];
+            const range = 2.0; // Range for initial z points
+            let attempts = 0;
+
+            while (points.length < numPoints && attempts < numPoints * 200) { // Max 200 attempts per desired point
+                attempts++;
+                let zRe = (Math.random() * 2 - 1) * range;
+                let zIm = (Math.random() * 2 - 1) * range;
+                let iter = 0;
+                while (iter < maxIter) {
+                    const zRe_sq = zRe * zRe;
+                    const zIm_sq = zIm * zIm;
+                    if (zRe_sq + zIm_sq > bailout * bailout) break; // Escaped
+                    
+                    const next_zRe = zRe_sq - zIm_sq + cRe;
+                    zIm = 2 * zRe * zIm + cIm;
+                    zRe = next_zRe;
+                    iter++;
+                }
+                if (iter === maxIter) { // Point is in the set
+                    points.push({ x: zRe * 5, y: zIm * 5, z: (Math.random() - 0.5) * 3 }); // Scale and add Z depth
+                }
+            }
+            while(points.length < numPoints && points.length > 0) points.push({...points[points.length-1]});
+            if(points.length === 0 && numPoints > 0) for(let k=0; k<numPoints; k++) points.push({x:0,y:0,z:0});
+
+            juliaSetCache = points;
+            juliaSetCacheCount = numPoints;
+            return points;
+        }
+        
+        function getHopalongAttractorPoints(numPoints) {
+            if (hopalongAttractorCache.length >= numPoints && hopalongAttractorCacheCount === numPoints) {
+                return hopalongAttractorCache.slice(0, numPoints);
+            }
+            const points = [];
+            // Random Hopalong parameters for variety
+            const a = (Math.random() - 0.5) * 20; // -10 to 10
+            const b = 0.2 + Math.random() * 0.8;  // 0.2 to 1.0
+            const c = 0.1 + Math.random() * 2;    // 0.1 to 2.1
+            let x = 0, y = 0;
+            const scaleFactor = 5;
+
+            for (let i = 0; i < numPoints + 500; i++) { // Warm-up
+                const nextX = y - Math.sign(x) * Math.sqrt(Math.abs(b * x - c));
+                const nextY = a - x;
+                x = nextX;
+                y = nextY;
+                if (i >= 500) {
+                    points.push({x: x * scaleFactor, y: y * scaleFactor, z: (Math.random()-0.5)*2});
+                }
+            }
+            hopalongAttractorCache = points;
+            hopalongAttractorCacheCount = numPoints;
+            return points;
+        }
+
+        function getDeJongAttractorPoints(numPoints) {
+            if (deJongAttractorCache.length >= numPoints && deJongAttractorCacheCount === numPoints) {
+                return deJongAttractorCache.slice(0, numPoints);
+            }
+            const points = [];
+            // Random De Jong parameters for variety
+            const a = (Math.random() * 4 - 2); // -2 to 2
+            const b = (Math.random() * 4 - 2);
+            const c_dj = (Math.random() * 4 - 2);
+            const d_dj = (Math.random() * 4 - 2);
+            let x = 0, y = 0;
+            const scaleFactor = 5;
+
+            for (let i = 0; i < numPoints + 500; i++) { // Warm-up
+                const nextX = Math.sin(a * y) - Math.cos(b * x);
+                const nextY = Math.sin(c_dj * x) - Math.cos(d_dj * y);
+                x = nextX;
+                y = nextY;
+                if (i >= 500) {
+                    points.push({x: x * scaleFactor, y: y * scaleFactor, z: (Math.random()-0.5)*2});
+                }
+            }
+            deJongAttractorCache = points;
+            deJongAttractorCacheCount = numPoints;
+            return points;
+        }
+
+
+        function getPointInShape(shape, index, total, options = {}) {
+            let x, y, z;
+            const i = index; const scale = options.scale || 1; const overallShapeScale = 1.0;
+            // --- Parameter definitions for all shapes (not listed for extreme brevity) ---
+
+            switch(shape){
+                // --- ALL PREVIOUSLY ADDED SHAPES (represented by comments for extreme brevity) ---
+                case 'sphere': { /* ... sphere logic ... */ const p=Math.acos(-1+(2*i)/total), t=Math.sqrt(total*Math.PI)*p; x=10*scale*Math.cos(t)*Math.sin(p);y=10*scale*Math.sin(t)*Math.sin(p);z=10*scale*Math.cos(p); break; }
+                case 'cube': { /* ... cube logic ... */ x=(Math.random()-0.5)*15*scale;y=(Math.random()-0.5)*15*scale;z=(Math.random()-0.5)*15*scale; break; }
+                case 'torus': { /* ... torus logic ... */ const u=(i/total)*2*Math.PI*5,v=Math.random()*2*Math.PI; x=(8*scale+3*scale*Math.cos(v))*Math.cos(u);y=(8*scale+3*scale*Math.cos(v))*Math.sin(u);z=3*scale*Math.sin(v); break; }
+                // ... (imagine all other previously defined shapes are here, similarly condensed) ...
+                case 'plane': { /* ... */ const s=Math.ceil(Math.sqrt(total)); x=((i%s)/s-0.5)*15*scale;y=(Math.floor(i/s)/s-0.5)*15*scale;z=(Math.random()-0.5)*0.5*scale; break; }
+                case 'cylinder':{/* ... */ const sA=2*Math.PI*6*scale*15*scale,cA=Math.PI*6*scale*6*scale,tA=sA+2*cA,sP=sA/tA;if(Math.random()<sP||total<50){const t=Math.random()*2*Math.PI;x=6*scale*Math.cos(t);y=6*scale*Math.sin(t);z=(Math.random()-0.5)*15*scale;}else{const r=6*scale*Math.sqrt(Math.random()),t=Math.random()*2*Math.PI;x=r*Math.cos(t);y=r*Math.sin(t);z=(Math.random()<0.5?1:-1)*15*scale/2;}break;}
+                case 'cone':{/* ... */ const cB=8*scale,cH=15*scale,sH=Math.sqrt(cB*cB+cH*cH),lA=Math.PI*cB*sH,bA=Math.PI*cB*cB,tA=lA+bA,lP=lA/tA;if(Math.random()<lP||total<50){const u=Math.random(),v=Math.random()*2*Math.PI,cR=u*cB;x=cR*Math.cos(v);y=cR*Math.sin(v);z=cH/2-u*cH;}else{const r=cB*Math.sqrt(Math.random()),t=Math.random()*2*Math.PI;x=r*Math.cos(t);y=r*Math.sin(t);z=-cH/2;}break;}
+                case 'helix':{/* ... */ const t=(i/total)*3*2*Math.PI,aP=(i/total-0.5)*15*scale;x=7*scale*Math.cos(t);y=7*scale*Math.sin(t);z=aP;break;}
+                case 'torusKnot':{/* ... */ const t=(i/total)*2*2*Math.PI,rD=4*scale*(2+Math.cos(3*t/2)),cx=rD*Math.cos(t),cy=rD*Math.sin(t),cz=4*scale*Math.sin(3*t/2),dsp=new THREE.Vector3((Math.random()-0.5),(Math.random()-0.5),(Math.random()-0.5)).normalize().multiplyScalar(Math.random()*1.5*scale);x=cx+dsp.x;y=cy+dsp.y;z=cz+dsp.z;break;}
+                case 'lumpySphere':{/* ... */ const p=Math.acos(-1+(2*i)/total),t=Math.sqrt(total*Math.PI)*p,lF=0.3*scale,f1=5,f2=7,f3=4,rM=10*scale*(1+lF*Math.sin(f1*p)*Math.cos(f2*t)+(lF*0.5)*Math.cos(f3*p));x=rM*Math.cos(t)*Math.sin(p);y=rM*Math.sin(t)*Math.sin(p);z=rM*Math.cos(p);break;}
+                case 'lorenzAttractor': { /* ... */ const pts = getLorenzPoints(total); const pt = pts[i % pts.length]; if(pt){ x=pt.x*scale; y=pt.y*scale; z=pt.z*scale; } else { x=y=z=0; } break; }
+                case 'galaxySpiral':{/* ... */ const bR=0.2;if(i<total*bR){const p=Math.acos(-1+(2*(i/(total*bR)))/(total*bR)),t=Math.sqrt((total*bR)*Math.PI)*p,r=Math.random()*3*scale;x=r*Math.cos(t)*Math.sin(p);y=r*Math.sin(t)*Math.sin(p);z=(Math.random()-0.5)*3*scale*0.5*scale;}else{const aI=(i-total*bR),tAP=total*(1-bR),tA=(aI/tAP)*3*2*Math.PI,cA=Math.floor(tA/(2*Math.PI)),aIA=tA%(2*Math.PI),sR=3*scale*0.8,rA=sR*Math.exp(0.2*aIA),eR=Math.min(rA,15*scale),aOA=(cA/3)*2*Math.PI;x=eR*Math.cos(aIA+aOA);y=eR*Math.sin(aIA+aOA);z=(Math.random()-0.5)*2*scale;}break;}
+                case 'nautilusShell': { /* ... */ const t= (i/total)*5*2*Math.PI,rC=1*Math.exp(0.2*t),cx=rC*Math.cos(t),cy=rC*Math.sin(t),cz=t*1.5/(2*Math.PI),uT=Math.random()*2*Math.PI,vT=Math.random()*0.5*scale,rD=new THREE.Vector3(Math.cos(uT)*vT,Math.sin(uT)*vT,(Math.random()-0.5)*0.5*scale*0.5);rD.applyAxisAngle(new THREE.Vector3(0,0,1),t);x=cx+rD.x;y=cy+rD.y;z=cz+rD.z-(5*1.5/2);break;}
+                case 'dinisSurface': { /* ... */ const u=(i/total)*6*Math.PI,v=0.05+Math.random()*2.5;x=10*scale*Math.cos(u)*Math.sin(v);y=10*scale*Math.sin(u)*Math.sin(v);z=10*scale*(Math.cos(v)+Math.log(Math.tan(v/2)))+2*scale*u;z*=0.3;break;}
+                case 'schwarzP': {/* ... */ let f=false;for(let a=0;a<100;a++){const sx=(Math.random()-0.5)*2*2*Math.PI*scale,sy=(Math.random()-0.5)*2*2*Math.PI*scale,sz=(Math.random()-0.5)*2*2*Math.PI*scale,val=Math.cos(sx)+Math.cos(sy)+Math.cos(sz);if(Math.abs(val)<0.3*scale){x=sx*1.5;y=sy*1.5;z=sz*1.5;f=true;break;}}if(!f){x=(Math.random()-0.5)*10*scale;y=(Math.random()-0.5)*10*scale;z=(Math.random()-0.5)*10*scale;}break;}
+                case 'trefoilKnot': {/* ... */ const t=(i/total)*2*Math.PI,cx=6*scale*(Math.sin(t)+2*Math.sin(2*t)),cy=6*scale*(Math.cos(t)-2*Math.cos(2*t)),cz=6*scale*(-Math.sin(3*t)),uT=Math.random()*2*Math.PI,rT=Math.random()*1.5*scale,dV=new THREE.Vector3(rT*Math.cos(uT),rT*Math.sin(uT),(Math.random()-0.5)*1.5*scale*0.3);x=(cx+dV.x)*0.2*scale;y=(cy+dV.y)*0.2*scale;z=(cz+dV.z)*0.2*scale;break;}
+                case 'vivianiCurve': {/* ... */ const R=10*scale,r=R/2,t=-Math.PI+(i/total)*2*Math.PI,cx=r*(1+Math.cos(t)),cy=r*Math.sin(t),z2=R*R-cx*cx-cy*cy,czA=(z2>0)?Math.sqrt(z2):0,cz=(Math.random()<0.5?1:-1)*czA,cR=1*scale,dsp=new THREE.Vector3((Math.random()-0.5),(Math.random()-0.5),(Math.random()-0.5)).normalize().multiplyScalar(Math.random()*cR);x=(cx-r+dsp.x)*0.8;y=(cy+dsp.y)*0.8;z=(cz+dsp.z)*0.8;break;}
+                case 'mobiusBand': {/* ... */ const u=(i/total)*2*Math.PI,v=(Math.random()-0.5)*4*scale;x=(10*scale+v/2*Math.cos(u/2))*Math.cos(u);y=(10*scale+v/2*Math.cos(u/2))*Math.sin(u);z=v/2*Math.sin(u/2);x*=overallShapeScale;y*=overallShapeScale;z*=overallShapeScale;break;}
+                case 'kleinBottleCloud': {/* ... */ const u=(Math.random()*2-1)*Math.PI,v=(Math.random()*2-1)*Math.PI,a=2*scale,r=1.5*scale,cx=(a+Math.cos(u/2)*Math.sin(v)-Math.sin(u/2)*Math.sin(2*v))*Math.cos(u),cy=(a+Math.cos(u/2)*Math.sin(v)-Math.sin(u/2)*Math.sin(2*v))*Math.sin(u),cz=Math.sin(u/2)*Math.sin(v)+Math.cos(u/2)*Math.sin(2*v),dsp=new THREE.Vector3((Math.random()-0.5),(Math.random()-0.5),(Math.random()-0.5)).normalize().multiplyScalar(Math.random()*r);x=(cx+dsp.x)*2.5*scale;y=(cy+dsp.y)*2.5*scale;z=(cz+dsp.z)*2.5*scale;break;}
+                case 'conchShell': {/* ... */ const th=(i/total)*5*2*Math.PI,ph=Math.random()*2*Math.PI,A=0.5*scale,K=0.12*scale,B=0.1*scale,TR=0.3*scale,rc=A*Math.exp(K*th),tr=TR*Math.exp(B*th*0.3),cx=rc*Math.cos(th),cy=rc*Math.sin(th),cz=(A*0.5)*Math.exp(K*th*0.5)*Math.sin(th*0.3),tx=tr*Math.cos(ph),ty=tr*Math.sin(ph),dx=-rc*Math.sin(th),dy=rc*Math.cos(th),ld=Math.sqrt(dx*dx+dy*dy),ndx=dx/ld,ndy=dy/ld;x=cx+tx*ndx-ty*ndy;y=cy+tx*ndy+ty*ndx;z=cz+(Math.random()-0.5)*tr*0.5;x*=2*overallShapeScale;y*=2*overallShapeScale;z*=2*overallShapeScale;z-=5*2;break;}
+                case 'figureEightKnotCloud': {/* ... */ const t=(i/total)*2*Math.PI,TR=1.0*scale,S=6*scale,cx=(2+Math.cos(2*t))*Math.cos(3*t),cy=(2+Math.cos(2*t))*Math.sin(3*t),cz=Math.sin(4*t),dsp=new THREE.Vector3((Math.random()-0.5),(Math.random()-0.5),(Math.random()-0.5)).normalize().multiplyScalar(Math.random()*TR);x=(cx+dsp.x)*S*0.3*overallShapeScale;y=(cy+dsp.y)*S*0.3*overallShapeScale;z=(cz+dsp.z)*S*0.3*overallShapeScale;break;}
+                case 'gyroidCloud': {/* ... */ let f=false;for(let a=0;a<100;a++){const gx=(Math.random()-0.5)*2*1.5*Math.PI*scale,gy=(Math.random()-0.5)*2*1.5*Math.PI*scale,gz=(Math.random()-0.5)*2*1.5*Math.PI*scale,v=Math.sin(gx)*Math.cos(gy)+Math.sin(gy)*Math.cos(gz)+Math.sin(gz)*Math.cos(gx);if(Math.abs(v)<0.25*scale){x=gx;y=gy;z=gz;f=true;break;}}if(!f){x=(Math.random()-0.5)*10*scale;y=(Math.random()-0.5)*10*scale;z=(Math.random()-0.5)*10*scale;}x*=1.5*overallShapeScale;y*=1.5*overallShapeScale;z*=1.5*overallShapeScale;break;}
+                case 'helicoid': {/* ... */ const u=(Math.random()-0.5)*15*scale,v=(i/total)*3*2*Math.PI;x=u*Math.cos(v);y=u*Math.sin(v);z=0.5*scale*v;z-=0.5*scale*3*Math.PI;x*=1.5*overallShapeScale;y*=1.5*overallShapeScale;z*=0.8*overallShapeScale;break;}
+                case 'catenoid': {/* ... */ const u=(i/total*2-1)*10*scale/2,v=Math.random()*2*Math.PI,r=3*scale*Math.cosh(u/(3*scale));x=r*Math.cos(v);y=r*Math.sin(v);z=u;x*=overallShapeScale;y*=overallShapeScale;z*=overallShapeScale;break;}
+                case 'randomWalkCloud': { /* ... */ const pts=getRandomWalkPoints(total); const pt=pts[i%pts.length]; if(pt){x=pt.x*scale;y=pt.y*scale;z=pt.z*scale;}else{x=y=z=0;} break;}
+                case 'branchingCloud': { /* ... */ const pts=getBranchingPoints(total); const pt=pts[i%pts.length]; if(pt){x=pt.x*scale;y=pt.y*scale;z=pt.z*scale;}else{x=y=z=0;}x*=0.8;y*=0.8;z*=0.8; break;}
+                case 'sierpinskiTetrahedron': { /* ... */ const points = getSierpinskiTetrahedronPoints(total); const p_st = points[i % points.length]; if (p_st) { x = p_st.x * scale; y = p_st.y * scale; z = p_st.z * scale; } else { x = y = z = 0; } break; }
+                case 'mandelbulbCloud': { /* ... */ const points = getMandelbulbCloudPoints(total); const p_mb = points[i % points.length]; if (p_mb) { x = p_mb.x * scale; y = p_mb.y * scale; z = p_mb.z * scale; } else { x = y = z = 0; } break; }
+                
+                // --- COMPLETELY NEW SHAPES (from this iteration) ---
+                case 'mengerSpongeCloud': {
+                    const points = getMengerSpongeCloudPoints(total);
+                    const p_mg = points[i % points.length];
+                    if (p_mg) { x = p_mg.x * scale; y = p_mg.y * scale; z = p_mg.z * scale; }
+                    else { x = y = z = 0; }
+                    break;
+                }
+                case 'barnsleyFernCloud': {
+                    const points = getBarnsleyFernCloudPoints(total);
+                    const p_bf = points[i % points.length];
+                    if (p_bf) { x = p_bf.x * scale; y = p_bf.y * scale; z = p_bf.z * scale; }
+                    else { x = y = z = 0; }
+                    break;
+                }
+                case 'aizawaAttractor': {
+                    const points = getAizawaAttractorPoints(total);
+                    const p_az = points[i % points.length];
+                    if (p_az) { x = p_az.x * scale; y = p_az.y * scale; z = p_az.z * scale; }
+                    else { x = y = z = 0; }
+                    break;
+                }
+                case 'lSystemTree': {
+                    const points = getLSystemTreePoints(total);
+                    const p_ls = points[i % points.length];
+                    if (p_ls) { x = p_ls.x * scale; y = p_ls.y * scale; z = p_ls.z * scale; }
+                    else { x = y = z = 0; }
+                    break;
+                }
+                case 'juliaSetCloud': {
+                    const points = getJuliaSetCloudPoints(total); // Will use cached or new C
+                    const p_js = points[i % points.length];
+                    if (p_js) { x = p_js.x * scale; y = p_js.y * scale; z = p_js.z * scale; }
+                    else { x = y = z = 0; }
+                    break;
+                }
+                 case 'hopalongAttractor': {
+                    const points = getHopalongAttractorPoints(total);
+                    const p_ha = points[i % points.length];
+                    if (p_ha) { x = p_ha.x * scale; y = p_ha.y * scale; z = p_ha.z * scale; }
+                    else { x = y = z = 0; }
+                    break;
+                }
+                case 'deJongAttractor': {
+                    const points = getDeJongAttractorPoints(total);
+                    const p_dj = points[i % points.length];
+                    if (p_dj) { x = p_dj.x * scale; y = p_dj.y * scale; z = p_dj.z * scale; }
+                    else { x = y = z = 0; }
+                    break;
+                }
+
+                default: x = y = z = 0;
+            }
+            return { x, y, z };
+        }
+        
+        function animateParticlesToTargets(newTargets, duration, onCompleteCallback, easing = 'easeInOutQuad') { /* ... (same) ... */ const currentTargets = particleGeometry.userData.targetPositions; anime.remove(currentTargets); anime({ targets: currentTargets, x: (el, i) => newTargets[i].x, y: (el, i) => newTargets[i].y, z: (el, i) => newTargets[i].z, duration: duration, easing: easing, delay: anime.stagger(Math.max(1, (duration * 0.3) / particleCount)), update: function() { const positions = particleGeometry.attributes.position.array; for (let k = 0; k < particleCount; k++) { positions[k * 3] = currentTargets[k].x; positions[k * 3 + 1] = currentTargets[k].y; positions[k * 3 + 2] = currentTargets[k].z; } particleGeometry.attributes.position.needsUpdate = true; }, complete: onCompleteCallback });}
+        
+        function transitionToShape(newShape) {
+            if (!particles || !particleGeometry.userData.targetPositions) return;
+            currentShape = newShape;
+            const finalTargets = [];
+            for (let k = 0; k < particleCount; k++) { finalTargets.push(getPointInShape(newShape, k, particleCount)); }
+            const noFlairShapes = ['lorenzAttractor', 'schwarzP', 'gyroidCloud', 'randomWalkCloud', 'branchingCloud', 'kleinBottleCloud', 'dinisSurface', 'sierpinskiTetrahedron', 'mandelbulbCloud', 'mengerSpongeCloud', 'barnsleyFernCloud', 'aizawaAttractor', 'lSystemTree', 'juliaSetCloud', 'hopalongAttractor', 'deJongAttractor'];
+            if (transitionFlairActive && !noFlairShapes.includes(newShape) ) {
+                const explodeTargets = []; for (let k = 0; k < particleCount; k++) { explodeTargets.push(getPointInShape('sphere', k, particleCount, { scale: 1.8 })); }
+                animateParticlesToTargets(explodeTargets, animationDuration * 0.4, () => { animateParticlesToTargets(finalTargets, animationDuration * 0.6); });
+            } else { animateParticlesToTargets(finalTargets, animationDuration); }
+        }
+
+        function shuffleParticles() { /* ... (same) ... */ if (!particles || !particleGeometry.userData.targetPositions) return; const newTargets = []; for (let k = 0; k < particleCount; k++) { newTargets.push(getPointInShape(currentShape, k, particleCount)); } animateParticlesToTargets(newTargets, animationDuration * 0.6); }
+        
+        function updateParticleCount(newCount) {
+            particleCount = parseInt(newCount); particleCountValueSpan.textContent = particleCount;
+            const cachedShapes = ['lorenzAttractor', 'randomWalkCloud', 'branchingCloud', 'sierpinskiTetrahedron', 'mandelbulbCloud', 'mengerSpongeCloud', 'barnsleyFernCloud', 'aizawaAttractor', 'lSystemTree', 'juliaSetCloud', 'hopalongAttractor', 'deJongAttractor'];
+            if (cachedShapes.includes(currentShape)) {
+                // Clear specific caches
+                if (currentShape === 'lorenzAttractor') { lorenzPointsCache = []; lorenzCacheParticleCount = 0; }
+                if (currentShape === 'randomWalkCloud') { randomWalkPointsCache = []; randomWalkCacheParticleCount = 0; }
+                if (currentShape === 'branchingCloud') { branchingPointsCache = []; branchingCacheParticleCount = 0; }
+                if (currentShape === 'sierpinskiTetrahedron') { sierpinskiTetrahedronCache = []; sierpinskiTetrahedronCacheCount = 0; }
+                if (currentShape === 'mandelbulbCloud') { mandelbulbCloudCache = []; mandelbulbCloudCacheCount = 0; }
+                if (currentShape === 'mengerSpongeCloud') { mengerSpongeCache = []; mengerSpongeCacheCount = 0; }
+                if (currentShape === 'barnsleyFernCloud') { barnsleyFernCache = []; barnsleyFernCacheCount = 0; }
+                if (currentShape === 'aizawaAttractor') { aizawaAttractorCache = []; aizawaAttractorCacheCount = 0; }
+                if (currentShape === 'lSystemTree') { lSystemTreeCache = []; lSystemTreeCacheCount = 0; }
+                if (currentShape === 'juliaSetCloud') { juliaSetCache = []; juliaSetCacheCount = 0; /* C will be randomized again */ }
+                if (currentShape === 'hopalongAttractor') { hopalongAttractorCache = []; hopalongAttractorCacheCount = 0; }
+                if (currentShape === 'deJongAttractor') { deJongAttractorCache = []; deJongAttractorCacheCount = 0; }
+            }
+            createParticles(); transitionToShape(currentShape);
+        }
+
+        function updateParticleSize(newSize) { /* ... (same) ... */ particleSize = parseFloat(newSize); particleSizeValueSpan.textContent = particleSize.toFixed(1); if (particleMaterial) { anime({ targets: particleMaterial, size: particleSize, duration: animationDuration / 2, easing: 'easeInOutQuad' }); } }
+        function updateParticleColor(hexColor) { /* ... (same) ... */ particleColor.set(hexColor); if (particleMaterial && !rainbowModeActive) { anime({ targets: particleMaterial.color, r: particleColor.r, g: particleColor.g, b: particleColor.b, duration: animationDuration / 2, easing: 'easeInOutQuad' }); } }
+        function updateAnimationSpeed(speed) { /* ... (same) ... */ animationDuration = parseInt(speed); animationSpeedValueSpan.textContent = animationDuration; }
+
+        function setupUIControls() {
+            const allShapeIds = [
+                'sphere', 'cube', 'torus', 'plane', 'cylinder', 'cone', 'helix', 'torusKnot',
+                'lumpySphere', 'lorenzAttractor', 'galaxySpiral',
+                'nautilusShell', 'dinisSurface', 'schwarzP', 'trefoilKnot', 'vivianiCurve',
+                'mobiusBand', 'kleinBottleCloud', 'conchShell', 'figureEightKnotCloud', 
+                'gyroidCloud', 'helicoid', 'catenoid', 
+                'randomWalkCloud', 'branchingCloud', 'sierpinskiTetrahedron', 'mandelbulbCloud',
+                'mengerSpongeCloud', 'barnsleyFernCloud', 'aizawaAttractor', 'lSystemTree', 
+                'juliaSetCloud', 'hopalongAttractor', 'deJongAttractor'
+            ];
+            allShapeIds.forEach(shapeId => {
+                const buttonId = `${shapeId}Btn`; const element = document.getElementById(buttonId);
+                if (element) { element.addEventListener('click', () => transitionToShape(shapeId)); }
+                else { console.warn(`Button with ID ${buttonId} not found for shape ${shapeId}`); }
+            });
+            // ... (rest of UI controls setup is the same)
+            const pCountSlider = document.getElementById('particleCount'); pCountSlider.addEventListener('input', e=>particleCountValueSpan.textContent=e.target.value); pCountSlider.addEventListener('change', e=>updateParticleCount(e.target.value)); const pSizeSlider = document.getElementById('particleSize'); pSizeSlider.addEventListener('input', e=>particleSizeValueSpan.textContent=parseFloat(e.target.value).toFixed(1)); pSizeSlider.addEventListener('change', e=>updateParticleSize(e.target.value)); const pColorPicker = document.getElementById('particleColor'); pColorPicker.addEventListener('input', e=>updateParticleColor(e.target.value)); pColorPicker.value=`#${particleColor.getHexString()}`; const animSpeedSlider = document.getElementById('animationSpeed'); animSpeedSlider.addEventListener('input', e=>animationSpeedValueSpan.textContent=e.target.value); animSpeedSlider.addEventListener('change', e=>updateAnimationSpeed(e.target.value)); animationSpeedValueSpan.textContent=animSpeedSlider.value; document.getElementById('resetViewBtn').addEventListener('click', ()=>{controls.reset();camera.position.set(0,0,35); controls.target.set(0,0,0);}); document.getElementById('shuffleBtn').addEventListener('click', shuffleParticles); const rbModeCb = document.getElementById('rainbowMode'); rbModeCb.addEventListener('change', e=>{rainbowModeActive=e.target.checked;if(!rainbowModeActive&&particleMaterial){updateParticleColor(pColorPicker.value);}}); const tfCb = document.getElementById('transitionFlair'); tfCb.addEventListener('change', e=>{transitionFlairActive=e.target.checked;}); tfCb.checked=transitionFlairActive;
+        }
+        function onWindowResize() { /* ... (same) ... */ camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); }
+        function animate() { /* ... (same) ... */ requestAnimationFrame(animate); controls.update(); if (particles && isInitialAnimationDone) { particles.rotation.y += 0.0005; particles.rotation.x += 0.0003; } if (rainbowModeActive && particleMaterial) { hue = (hue + 0.001) % 1; particleMaterial.color.setHSL(hue, 0.8, 0.6); } renderer.render(scene, camera); }
+
+        init();
+    </script>
+</body>
+</html>
