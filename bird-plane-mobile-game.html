@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Bird Tap Challenge</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Press Start 2P', cursive;
+            background-color: #87CEEB; /* Sky Blue */
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            touch-action: manipulation; /* Prevents double-tap zoom on mobile */
+        }
+
+        #game-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 600px; /* Max width for larger screens */
+            height: 100%;
+            position: relative; /* For positioning overlay screens */
+        }
+
+        #status-bar {
+            margin-bottom: 10px;
+            font-size: clamp(12px, 3vw, 16px); /* Responsive font size */
+            color: #fff;
+            text-shadow: 2px 2px #00000080;
+            display: flex;
+            justify-content: space-between;
+            width: 90%;
+            padding: 10px;
+            background-color: rgba(0,0,0,0.2);
+            border-radius: 8px;
+        }
+
+        #status-bar span {
+            margin: 0 5px;
+        }
+
+        #game-canvas {
+            border: 3px solid #333;
+            background-color: #ADD8E6; /* Lighter blue for canvas */
+            display: block;
+            width: 90%; /* Responsive width */
+            aspect-ratio: 4 / 3; /* Maintain aspect ratio */
+            max-height: 70vh; /* Max height relative to viewport */
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .overlay-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.75);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            z-index: 10;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .overlay-screen h1 {
+            font-size: clamp(24px, 6vw, 36px);
+            margin-bottom: 15px;
+        }
+        .overlay-screen h2 {
+            font-size: clamp(20px, 5vw, 30px);
+            margin-bottom: 10px;
+        }
+        .overlay-screen p {
+            font-size: clamp(14px, 3.5vw, 18px);
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .game-button {
+            padding: 12px 25px;
+            font-size: clamp(16px, 4vw, 20px);
+            font-family: 'Press Start 2P', cursive;
+            cursor: pointer;
+            background-color: #FFD700; /* Gold */
+            color: #403000;
+            border: 3px solid #DAA520; /* Darker Gold */
+            border-radius: 8px;
+            box-shadow: 0 5px #B8860B; /* Even Darker Gold for 3D effect */
+            margin-top: 20px;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+
+        .game-button:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px #B8860B;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-area">
+        <div id="status-bar">
+            <span>Score: <span id="score">0</span></span>
+            <span>Planes: <span id="planes-hit">0</span>/5</span>
+            <span>Misses: <span id="misses">0</span>/5</span>
+        </div>
+        <canvas id="game-canvas"></canvas>
+
+        <div id="start-screen" class="overlay-screen">
+            <h1>Bird Tap Challenge</h1>
+            <p>Tap the birds (🐦), avoid the planes (✈️)!<br>5 plane hits or 5 misses and it's game over.</p>
+            <button id="start-button" class="game-button">Start Game</button>
+        </div>
+
+        <div id="game-over-screen" class="overlay-screen" style="display:none;">
+            <h2>Game Over!</h2>
+            <p>Final Score: <span id="final-score">0</span></p>
+            <button id="restart-button" class="game-button">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        // Game Elements
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+
+        const scoreDisplay = document.getElementById('score');
+        const planesHitDisplay = document.getElementById('planes-hit');
+        const missesDisplay = document.getElementById('misses');
+
+        const startScreen = document.getElementById('start-screen');
+        const gameOverScreen = document.getElementById('game-over-screen');
+        const finalScoreDisplay = document.getElementById('final-score');
+
+        const startButton = document.getElementById('start-button');
+        const restartButton = document.getElementById('restart-button');
+
+        // Game Configuration
+        const BIRD_EMOJI = '🐦';
+        const PLANE_EMOJI = '✈️';
+        const BIRD_SIZE_BASE = 25; // Base size, will be scaled with canvas
+        const PLANE_SIZE_BASE = 35; // Base size
+        const MIN_SPEED_BASE = 0.5;
+        const MAX_SPEED_BASE = 2.0;
+        const SPAWN_INTERVAL = 1200; // ms
+        const BIRD_PROBABILITY = 0.65; // 65% chance of bird
+        const POINTS_BIRD = 10;
+        const POINTS_PLANE_PENALTY = 15; // Increased penalty for planes
+        const MAX_PLANES_HIT = 5;
+        const MAX_MISSES = 5;
+
+        // Game State
+        let score = 0;
+        let planesHit = 0;
+        let missedClicks = 0;
+        let entities = [];
+        let isGameOver = true; // Start with game over (on start screen)
+        let animationFrameId = null;
+        let lastSpawnTime = 0;
+        let scaleFactor = 1; // For scaling sizes and speeds based on canvas size
+
+        // Utility to get random number
+        function getRandom(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        // Resize canvas and calculate scale factor
+        function resizeCanvas() {
+            const gameArea = document.getElementById('game-area');
+            const availableWidth = gameArea.clientWidth * 0.9; // 90% of game area width
+            const availableHeight = gameArea.clientHeight * 0.7; // 70% of game area height for canvas
+
+            // Calculate dimensions based on aspect ratio 4:3
+            let newWidth, newHeight;
+            if (availableWidth / availableHeight > 4/3) { // Width is proportionally larger or equal
+                newHeight = availableHeight;
+                newWidth = newHeight * (4/3);
+            } else { // Height is proportionally larger
+                newWidth = availableWidth;
+                newHeight = newWidth * (3/4);
+            }
+            
+            canvas.width = newWidth;
+            canvas.height = newHeight;
+
+            // Calculate scale factor based on a reference width (e.g., 400px)
+            scaleFactor = canvas.width / 400; 
+
+            // Set font style for entities after canvas is sized
+            ctx.textBaseline = 'middle'; // Align emoji vertically better
+            ctx.textAlign = 'center'; // Align emoji horizontally better
+
+            // Redraw if game is active (though typically resize happens before game starts or on pause)
+            if (!isGameOver) {
+                drawGame();
+            }
+        }
+
+        // Spawn new entities (birds or planes)
+        function spawnEntity() {
+            const type = Math.random() < BIRD_PROBABILITY ? 'bird' : 'plane';
+            const size = (type === 'bird' ? BIRD_SIZE_BASE : PLANE_SIZE_BASE) * scaleFactor;
+            const emoji = type === 'bird' ? BIRD_EMOJI : PLANE_EMOJI;
+            
+            const speed = getRandom(MIN_SPEED_BASE, MAX_SPEED_BASE) * scaleFactor * (Math.random() < 0.5 ? 1 : -1); // Random direction
+            
+            const x = speed > 0 ? -size : canvas.width + size; // Start off-screen
+            const y = getRandom(size, canvas.height - size); // Random vertical position
+
+            entities.push({ x, y, type, speed, size, emoji });
+        }
+
+        // Update positions of entities
+        function updateEntities() {
+            entities.forEach(entity => {
+                entity.x += entity.speed;
+            });
+            // Remove entities that are off-screen
+            entities = entities.filter(entity => 
+                entity.x > -entity.size * 2 && entity.x < canvas.width + entity.size * 2
+            );
+        }
+
+        // Draw all entities on canvas
+        function drawEntities() {
+            entities.forEach(entity => {
+                ctx.font = `${entity.size}px 'Press Start 2P'`;
+                // Adjust y for better visual centering if needed, but textBaseline='middle' and textAlign='center' helps
+                ctx.fillText(entity.emoji, entity.x, entity.y);
+            });
+        }
+
+        // Main draw function for the game
+        function drawGame() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
+            drawEntities(); // Draw all current entities
+        }
+
+        // Game loop
+        function gameLoop(timestamp) {
+            if (isGameOver) return;
+
+            updateEntities();
+            drawGame();
+
+            if (timestamp - lastSpawnTime > SPAWN_INTERVAL) {
+                spawnEntity();
+                lastSpawnTime = timestamp;
+            }
+
+            animationFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        // Update score and status display
+        function updateStatusDisplay() {
+            scoreDisplay.textContent = score;
+            planesHitDisplay.textContent = `${planesHit}/${MAX_PLANES_HIT}`;
+            missesDisplay.textContent = `${missedClicks}/${MAX_MISSES}`;
+        }
+
+        // Handle tap/click on canvas
+        function handleTap(event) {
+            if (isGameOver) return;
+
+            const rect = canvas.getBoundingClientRect();
+            // Adjust for CSS scaling if canvas.style.width/height is different from canvas.width/height
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            
+            const tapX = (event.clientX - rect.left) * scaleX;
+            const tapY = (event.clientY - rect.top) * scaleY;
+
+            let hitEntity = false;
+            for (let i = entities.length - 1; i >= 0; i--) {
+                const entity = entities[i];
+                // Simple rectangular hitbox (center-based)
+                // (entity.x, entity.y) is the center due to textAlign and textBaseline settings
+                const distance = Math.sqrt(Math.pow(tapX - entity.x, 2) + Math.pow(tapY - entity.y, 2));
+
+                if (distance < entity.size / 1.5) { // Adjusted hitbox size for better feel
+                    hitEntity = true;
+                    if (entity.type === 'bird') {
+                        score += POINTS_BIRD;
+                        // Optional: Add a visual effect for scoring
+                    } else { // Plane
+                        score -= POINTS_PLANE_PENALTY;
+                        planesHit++;
+                    }
+                    entities.splice(i, 1); // Remove tapped entity
+                    break; 
+                }
+            }
+
+            if (!hitEntity) {
+                missedClicks++;
+            }
+
+            updateStatusDisplay();
+
+            // Check game over conditions
+            if (planesHit >= MAX_PLANES_HIT || missedClicks >= MAX_MISSES || score < -50) { // Added score condition to prevent deep negative
+                triggerGameOver();
+            }
+        }
+
+        // Trigger game over state
+        function triggerGameOver() {
+            isGameOver = true;
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+            finalScoreDisplay.textContent = score;
+            gameOverScreen.style.display = 'flex';
+        }
+
+        // Reset game state for a new game
+        function resetGame() {
+            score = 0;
+            planesHit = 0;
+            missedClicks = 0;
+            entities = [];
+            isGameOver = false; 
+            updateStatusDisplay();
+            gameOverScreen.style.display = 'none';
+            startScreen.style.display = 'none';
+        }
+
+        // Start the game flow
+        function startGameFlow() {
+            resetGame();
+            resizeCanvas(); // Ensure canvas is sized correctly before starting
+            lastSpawnTime = performance.now(); // Use performance.now() for requestAnimationFrame
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+            animationFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        // Event Listeners
+        window.addEventListener('resize', () => {
+            // Only resize and redraw if game is not in a paused/overlay state or if it's appropriate
+            // For simplicity, always resize, then if game is active, it will redraw.
+            resizeCanvas();
+            if(!isGameOver) drawGame(); // Redraw immediately after resize if game is active
+        });
+        
+        canvas.addEventListener('click', handleTap);
+        // For better mobile responsiveness, you might use 'touchstart'
+        // canvas.addEventListener('touchstart', function(e){ e.preventDefault(); handleTap(e.touches[0]); }, { passive: false });
+
+
+        startButton.addEventListener('click', startGameFlow);
+        restartButton.addEventListener('click', startGameFlow);
+
+        // Initial Setup
+        resizeCanvas(); // Initial sizing
+        updateStatusDisplay(); // Show initial 0s
+        startScreen.style.display = 'flex'; // Show start screen initially
+        gameOverScreen.style.display = 'none';
+
+    </script>
+</body>
+</html>
