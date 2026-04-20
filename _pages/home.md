@@ -3,7 +3,7 @@ permalink: /
 ---
 
 Hello!
-I'm Ross, just moved back to the UK after 8 years in Tokyo, Japan.
+I'm Ross, and I've recently moved back to the UK after 8 years in Tokyo, Japan.
 
 I have a MMath degree in Mathematics and a DPhil (PhD) in Computational Biology from the University of Oxford, UK.
 These days I do machine learning and data science in Python.
