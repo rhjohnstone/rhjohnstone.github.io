@@ -2,4 +2,6 @@ main:
   - title: "Blog"
     url: /blog/
   - title: "Random art"
-    url: /random_art/
+    url: /random-art/
+  - title: "Job tracker"
+    url: /job-tracker/
