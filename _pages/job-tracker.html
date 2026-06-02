@@ -327,18 +327,7 @@ permalink: /job-tracker/
       <button class="btn btn-primary" onclick="addApplication()"><i class="ti ti-sparkles" aria-hidden="true"></i> Add</button>
     </div>
     <div class="meta-row">
-      <label>Source:</label>
-      <select id="source-select">
-        <option value="">Not specified</option>
-        <option>LinkedIn</option>
-        <option>Company website</option>
-        <option>Indeed</option>
-        <option>Glassdoor</option>
-        <option>Recruiter</option>
-        <option>Referral</option>
-        <option>Other</option>
-      </select>
-      <label style="margin-left:4px;">Submitted:</label>
+      <label>Submitted:</label>
       <input type="date" id="date-input" />
     </div>
     <div class="status-msg" id="status-msg">
@@ -458,7 +447,6 @@ permalink: /job-tracker/
   // ─── Add application ──────────────────────────────────────────
   async function addApplication() {
     const url = document.getElementById('url-input').value.trim();
-    const source = document.getElementById('source-select').value;
     const dateAdded = document.getElementById('date-input').value || today();
 
     if (!url) { showMsg('Please paste a job URL.', true); return; }
@@ -497,7 +485,6 @@ permalink: /job-tracker/
       title: extracted.title || 'See job posting',
       company: extracted.company || extractDomain(url),
       reqNumber: extracted.reqNumber || '',
-      source,
       status: 'submitted',
       dateAdded: dateAdded,
       notes: '',
@@ -507,7 +494,6 @@ permalink: /job-tracker/
     apps.unshift(app);
     persistApps();
     document.getElementById('url-input').value = '';
-    document.getElementById('source-select').value = '';
     document.getElementById('date-input').value = today();
     hideMsg();
     render();
@@ -569,10 +555,10 @@ permalink: /job-tracker/
 
   // ─── Export ───────────────────────────────────────────────────
   function exportCSV() {
-    const headers = ['ID','Title','Company','Event Status','Event Date','Source','Req Number','URL','Notes'];
+    const headers = ['ID','Title','Company','Event Status','Event Date','Req Number','URL','Notes'];
     const rows = apps.flatMap(a =>
       (a.history || [{date: a.dateAdded, status: a.status}]).map(h =>
-        [a.id,a.title,a.company,h.status,h.date,a.source,a.reqNumber,a.url,a.notes]
+        [a.id,a.title,a.company,h.status,h.date,a.reqNumber,a.url,a.notes]
         .map(v => `"${(v||'').replace(/"/g,'""')}"`)
       )
     );
@@ -619,7 +605,6 @@ permalink: /job-tracker/
               <span class="badge badge-${app.status}">${statusLabels[app.status]}</span>
               <span class="meta-chip"><i class="ti ti-calendar" aria-hidden="true"></i>${fmt(app.dateAdded)}</span>
               ${app.reqNumber ? `<span class="meta-chip"><i class="ti ti-hash" aria-hidden="true"></i>${esc(app.reqNumber)}</span>` : ''}
-              ${app.source ? `<span class="meta-chip"><i class="ti ti-map-pin" aria-hidden="true"></i>${esc(app.source)}</span>` : ''}
             </div>
           </div>
           <div class="card-actions">
@@ -642,7 +627,6 @@ permalink: /job-tracker/
               <div class="detail-block-value"><a class="detail-link" href="https://archive.ph/${encodeURIComponent(app.url)}" target="_blank" rel="noopener">View on archive.ph</a></div>
             </div>
             ${app.reqNumber ? `<div class="detail-block"><div class="detail-block-label">Req number</div><div class="detail-block-value">${esc(app.reqNumber)}</div></div>` : ''}
-            ${app.source ? `<div class="detail-block"><div class="detail-block-label">Source</div><div class="detail-block-value">${esc(app.source)}</div></div>` : ''}
             
           </div>
           <div class="section-label">Update status</div>
