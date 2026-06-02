@@ -569,9 +569,9 @@ permalink: /job-tracker/
 
   // ─── Export ───────────────────────────────────────────────────
   function exportCSV() {
-    const headers = ['Title','Company','Status','Date Added','Source','Req Number','URL','Notes'];
+    const headers = ['ID','Title','Company','Status','Date Added','Source','Req Number','URL','Notes'];
     const rows = apps.map(a =>
-      [a.title,a.company,a.status,a.dateAdded,a.source,a.reqNumber,a.url,a.notes]
+      [a.id,a.title,a.company,a.status,a.dateAdded,a.source,a.reqNumber,a.url,a.notes]
       .map(v => `"${(v||'').replace(/"/g,'""')}"`));
     const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
     const blob = new Blob([csv], {type:'text/csv'});
