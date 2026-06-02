@@ -1,6 +1,6 @@
 ---
 title: Random art
-permalink: /random_art/
+permalink: /random-art/
 ---
 
 Refresh the page to generate a new masterpiece!
