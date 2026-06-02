@@ -463,6 +463,9 @@ permalink: /job-tracker/
     if (!url) { showMsg('Please paste a job URL.', true); return; }
     if (!url.startsWith('http')) { showMsg('URL must start with http:// or https://', true); return; }
 
+    showMsg('Opening archive.ph to snapshot the posting…', false, true);
+    window.open('https://archive.ph/submit/?url=' + encodeURIComponent(url), '_blank');
+
     showMsg('Loading job page — this may take up to 30 seconds…', false, true);
 
     let extracted = { title: '', company: '', reqNumber: '' };
@@ -486,9 +489,6 @@ permalink: /job-tracker/
       showMsg('Could not extract details — added with URL only. (' + e.message + ')', true);
       extracted = { title: 'See job posting', company: extractDomain(url), reqNumber: '' };
     }
-
-    showMsg('Opening archive.ph to snapshot the posting…', false, true);
-    window.open('https://archive.ph/submit/?url=' + encodeURIComponent(url), '_blank');
 
     const app = {
       id: Date.now().toString(),
