@@ -463,47 +463,28 @@ permalink: /job-tracker/
     if (!url) { showMsg('Please paste a job URL.', true); return; }
     if (!url.startsWith('http')) { showMsg('URL must start with http:// or https://', true); return; }
 
-    showMsg('Extracting job details with AI…', false, true);
+    showMsg('Loading job page — this may take up to 30 seconds…', false, true);
 
     let extracted = { title: '', company: '', reqNumber: '' };
     try {
-      const prompt = `You are a job data extractor. The user has given you this job posting URL: ${url}
-
-Use your web search tool to visit this URL and extract:
-- Job title (exact wording)
-- Company name
-- Requisition / job ID number (if shown, else leave blank)
-
-Respond ONLY with a JSON object — no markdown fences, no explanation:
-{"title":"Senior Software Engineer","company":"Acme Corp","reqNumber":"REQ-12345"}
-
-If you cannot load the page, infer what you can from the URL itself. Always return valid JSON.`;
-
-      const resp = await fetch(getProxyUrl(), {
+      // Use the /fetch-job endpoint which runs Puppeteer server-side
+      // to fully render the page before extracting job details
+      const fetchJobUrl = getProxyUrl().replace('/proxy', '/fetch-job');
+      const resp = await fetch(fetchJobUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-haiku-4-5',
-          max_tokens: 1000,
-          tools: [{ type: 'web_search_20250305', name: 'web_search' }],
-          messages: [{ role: 'user', content: prompt }]
-        })
+        body: JSON.stringify({ url })
       });
 
       if (!resp.ok) {
         const err = await resp.json().catch(() => ({}));
-        throw new Error(err.error?.message || `HTTP ${resp.status}`);
+        throw new Error(err.error || `HTTP ${resp.status}`);
       }
 
-      const data = await resp.json();
-      const textBlocks = (data.content || []).filter(b => b.type === 'text');
-      const raw = textBlocks.map(b => b.text).join('');
-      const clean = raw.replace(/```json|```/g, '').trim();
-      const match = clean.match(/\{[\s\S]*?\}/);
-      if (match) extracted = JSON.parse(match[0]);
+      extracted = await resp.json();
     } catch(e) {
       showMsg('Could not extract details — added with URL only. (' + e.message + ')', true);
-      extracted = { title: 'Unknown role', company: extractDomain(url), reqNumber: '' };
+      extracted = { title: 'See job posting', company: extractDomain(url), reqNumber: '' };
     }
 
     showMsg('Opening archive.ph to snapshot the posting…', false, true);
@@ -512,7 +493,7 @@ If you cannot load the page, infer what you can from the URL itself. Always retu
     const app = {
       id: Date.now().toString(),
       url,
-      title: extracted.title || 'Unknown role',
+      title: extracted.title || 'See job posting',
       company: extracted.company || extractDomain(url),
       reqNumber: extracted.reqNumber || '',
       source,
