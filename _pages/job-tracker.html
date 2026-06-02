@@ -64,33 +64,6 @@ permalink: /job-tracker/
     line-height: 1.5;
   }
 
-  /* Config screen */
-  #config-screen {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
-  }
-  .config-card {
-    background: var(--surface);
-    border: 0.5px solid var(--border-strong);
-    border-radius: var(--radius-lg);
-    padding: 2.5rem;
-    max-width: 460px;
-    width: 100%;
-  }
-  .config-logo {
-    font-family: 'DM Serif Display', serif;
-    font-size: 26px;
-    margin-bottom: 1.5rem;
-    letter-spacing: -0.5px;
-  }
-  .config-card h2 { font-size: 16px; font-weight: 500; margin-bottom: 6px; }
-  .config-card p { font-size: 13px; color: var(--text-2); margin-bottom: 1.25rem; line-height: 1.6; }
-  .config-card a { color: var(--text); }
-  .field-label { font-size: 12px; color: var(--text-2); margin-bottom: 6px; display: block; }
-  .field-hint { font-size: 12px; color: var(--text-3); margin-top: -10px; margin-bottom: 1rem; }
 
   /* Main app */
   #app { display: none; max-width: 760px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
@@ -287,20 +260,6 @@ permalink: /job-tracker/
 </head>
 <body>
 
-<!-- Config screen (first run) -->
-<div id="config-screen">
-  <div class="config-card">
-    <div class="config-logo">Job Tracker</div>
-    <h2>One-time setup</h2>
-    <p>Enter the URL of your Netlify proxy. This keeps your Anthropic API key secure — it never touches your browser.</p>
-    <label class="field-label" for="proxy-input">Netlify proxy URL</label>
-    <input type="url" class="text-input" id="proxy-input" placeholder="https://your-proxy.netlify.app/proxy" />
-    <p class="field-hint">From your Netlify project — looks like https://your-site-name.netlify.app/proxy</p>
-    <button class="btn btn-primary btn-full" onclick="saveConfig()">
-      Save and open tracker <i class="ti ti-arrow-right" aria-hidden="true"></i>
-    </button>
-  </div>
-</div>
 
 <!-- Main App -->
 <div id="app">
@@ -364,22 +323,18 @@ permalink: /job-tracker/
 <div class="dialog-overlay" id="settings-dialog">
   <div class="dialog" style="max-width:440px;">
     <h3>Settings</h3>
-    <p>Update your Netlify proxy URL or clear all data.</p>
-    <label class="field-label">Netlify proxy URL</label>
-    <input type="url" class="text-input" id="settings-proxy" placeholder="https://your-proxy.netlify.app/proxy" />
+    <p>Clear all application data from this browser.</p>
     <div class="dialog-btns">
       <button class="btn btn-sm" onclick="closeDialog()">Cancel</button>
       <button class="btn btn-sm" onclick="clearAllData()" style="color:var(--red-text);">Clear all data</button>
-      <button class="btn btn-sm btn-primary" onclick="saveSettingsProxy()">Save</button>
     </div>
   </div>
 </div>
 
 <script>
   // ─── CONFIGURATION ────────────────────────────────────────────
-  // Replace this with your Netlify proxy URL after deployment,
-  // OR leave blank and the app will ask on first run.
-  const PROXY_URL_DEFAULT = '';
+  // Replace with your Netlify proxy URL before deploying.
+  const PROXY_URL = 'https://dainty-arithmetic-b2c5b9.netlify.app/proxy';
 
   // ─── State ────────────────────────────────────────────────────
   let apps = [];
@@ -388,32 +343,13 @@ permalink: /job-tracker/
   let pendingDeleteId = null;
 
   // ─── Config helpers ───────────────────────────────────────────
-  function getProxyUrl() {
-    return PROXY_URL_DEFAULT || localStorage.getItem('jt_proxy') || '';
-  }
-  function saveConfig() {
-    const url = document.getElementById('proxy-input').value.trim();
-    if (!url.startsWith('https://')) {
-      alert('Please enter a valid https:// URL.');
-      return;
-    }
-    localStorage.setItem('jt_proxy', url);
-    init();
-  }
-  function saveSettingsProxy() {
-    const url = document.getElementById('settings-proxy').value.trim();
-    if (url && !url.startsWith('https://')) { alert('Please enter a valid https:// URL.'); return; }
-    if (url) localStorage.setItem('jt_proxy', url);
-    closeDialog();
-  }
+  function getProxyUrl() { return PROXY_URL; }
   function showSettings() {
-    document.getElementById('settings-proxy').value = getProxyUrl();
     document.getElementById('settings-dialog').classList.add('open');
   }
   function clearAllData() {
     if (!confirm('Delete ALL applications and settings? This cannot be undone.')) return;
     localStorage.removeItem('jt_apps');
-    localStorage.removeItem('jt_proxy');
     location.reload();
   }
 
@@ -425,16 +361,10 @@ permalink: /job-tracker/
 
   // ─── Init ─────────────────────────────────────────────────────
   function init() {
-    if (!getProxyUrl()) {
-      document.getElementById('config-screen').style.display = 'flex';
-      document.getElementById('app').style.display = 'none';
-    } else {
-      document.getElementById('config-screen').style.display = 'none';
-      document.getElementById('app').style.display = 'block';
-      loadApps();
-      render();
-      document.getElementById('date-input').value = today();
-    }
+    document.getElementById('app').style.display = 'block';
+    loadApps();
+    render();
+    document.getElementById('date-input').value = today();
   }
 
   // ─── Dates ───────────────────────────────────────────────────
