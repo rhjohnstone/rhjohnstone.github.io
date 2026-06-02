@@ -1,0 +1,698 @@
+---
+layout: none
+permalink: /job-tracker/
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Job Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f7f6f2;
+    --surface: #ffffff;
+    --surface2: #f0efe9;
+    --border: rgba(0,0,0,0.10);
+    --border-strong: rgba(0,0,0,0.18);
+    --text: #1a1a18;
+    --text-2: #6b6b66;
+    --text-3: #a8a89f;
+    --accent: #1a1a18;
+    --accent-text: #f7f6f2;
+    --blue-bg: #e8f0fb; --blue-text: #1a3a7a;
+    --amber-bg: #fdf3de; --amber-text: #6b3e00;
+    --green-bg: #e6f5e6; --green-text: #1a5c1a;
+    --red-bg: #fceaea; --red-text: #7a1a1a;
+    --gray-bg: #f0efe9; --gray-text: #4a4a45;
+    --radius: 10px;
+    --radius-lg: 14px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141412;
+      --surface: #1e1e1b;
+      --surface2: #252520;
+      --border: rgba(255,255,255,0.08);
+      --border-strong: rgba(255,255,255,0.15);
+      --text: #f0efe9;
+      --text-2: #9a9a90;
+      --text-3: #5a5a55;
+      --accent: #f0efe9;
+      --accent-text: #141412;
+      --blue-bg: #0d2040; --blue-text: #93b8f0;
+      --amber-bg: #2a1e00; --amber-text: #f0b840;
+      --green-bg: #0d2a0d; --green-text: #70c870;
+      --red-bg: #2a0d0d; --red-text: #f09090;
+      --gray-bg: #252520; --gray-text: #9a9a90;
+    }
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  /* Config screen */
+  #config-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+  .config-card {
+    background: var(--surface);
+    border: 0.5px solid var(--border-strong);
+    border-radius: var(--radius-lg);
+    padding: 2.5rem;
+    max-width: 460px;
+    width: 100%;
+  }
+  .config-logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 26px;
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.5px;
+  }
+  .config-card h2 { font-size: 16px; font-weight: 500; margin-bottom: 6px; }
+  .config-card p { font-size: 13px; color: var(--text-2); margin-bottom: 1.25rem; line-height: 1.6; }
+  .config-card a { color: var(--text); }
+  .field-label { font-size: 12px; color: var(--text-2); margin-bottom: 6px; display: block; }
+  .field-hint { font-size: 12px; color: var(--text-3); margin-top: -10px; margin-bottom: 1rem; }
+
+  /* Main app */
+  #app { display: none; max-width: 760px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+
+  .app-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 2rem; }
+  .app-logo { font-family: 'DM Serif Display', serif; font-size: 28px; letter-spacing: -0.5px; line-height: 1; }
+  .app-logo span { color: var(--text-2); font-size: 14px; font-family: 'DM Sans', sans-serif; font-weight: 400; display: block; margin-top: 4px; }
+  .header-actions { display: flex; gap: 8px; align-items: center; }
+
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 1.75rem; }
+  .stat {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+  }
+  .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-3); margin-bottom: 6px; font-weight: 500; }
+  .stat-value { font-size: 28px; font-weight: 300; font-family: 'DM Serif Display', serif; }
+
+  .add-card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+  .add-row { display: flex; gap: 8px; }
+  .meta-row { display: flex; gap: 10px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
+  .meta-row label { font-size: 12px; color: var(--text-2); white-space: nowrap; }
+
+  .status-msg { font-size: 13px; margin-top: 10px; display: none; align-items: center; gap: 8px; color: var(--text-2); }
+  .status-msg.error { color: var(--red-text); }
+  .spinner { width: 14px; height: 14px; border: 1.5px solid var(--border-strong); border-top-color: var(--text-2); border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Inputs */
+  .text-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 0.5px solid var(--border-strong);
+    border-radius: var(--radius);
+    background: var(--surface2);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    margin-bottom: 1rem;
+  }
+  .text-input:focus { border-color: var(--text); }
+  .text-input::placeholder { color: var(--text-3); }
+  .add-row .text-input { margin-bottom: 0; flex: 1; }
+
+  select, input[type="date"] {
+    font-size: 12px;
+    padding: 6px 10px;
+    border: 0.5px solid var(--border-strong);
+    border-radius: var(--radius);
+    background: var(--surface2);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+  }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 9px 16px;
+    border: 0.5px solid var(--border-strong);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    cursor: pointer;
+    white-space: nowrap;
+    text-decoration: none;
+    transition: background 0.1s, opacity 0.1s;
+  }
+  .btn:hover { background: var(--surface2); }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+  .btn-primary:hover { opacity: 0.85; background: var(--accent); }
+  .btn-full { width: 100%; justify-content: center; }
+  .btn-sm { padding: 6px 12px; font-size: 13px; }
+  .btn-xs { padding: 4px 9px; font-size: 12px; }
+  .btn-ghost { border-color: transparent; background: transparent; }
+  .btn-ghost:hover { background: var(--surface2); border-color: var(--border); }
+
+  /* Filters */
+  .filters { display: flex; gap: 6px; margin-bottom: 1.25rem; flex-wrap: wrap; }
+  .filter-pill {
+    padding: 5px 14px;
+    border-radius: 20px;
+    border: 0.5px solid var(--border-strong);
+    background: transparent;
+    color: var(--text-2);
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: all 0.1s;
+  }
+  .filter-pill:hover { color: var(--text); border-color: var(--text); }
+  .filter-pill.active { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+
+  /* App cards */
+  .apps-list { display: flex; flex-direction: column; gap: 8px; }
+  .app-card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition: border-color 0.15s;
+  }
+  .app-card:hover { border-color: var(--border-strong); }
+  .card-main { padding: 1rem 1.25rem; display: flex; align-items: flex-start; gap: 12px; }
+  .card-body { flex: 1; min-width: 0; }
+  .card-title { font-weight: 500; font-size: 15px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card-company { font-size: 13px; color: var(--text-2); }
+  .card-meta { display: flex; align-items: center; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
+  .badge { font-size: 11px; font-weight: 500; letter-spacing: 0.03em; padding: 3px 9px; border-radius: 20px; }
+  .badge-submitted { background: var(--blue-bg); color: var(--blue-text); }
+  .badge-interviewing { background: var(--amber-bg); color: var(--amber-text); }
+  .badge-offer { background: var(--green-bg); color: var(--green-text); }
+  .badge-unsuccessful { background: var(--red-bg); color: var(--red-text); }
+  .badge-withdrawn { background: var(--gray-bg); color: var(--gray-text); }
+  .meta-chip { font-size: 12px; color: var(--text-3); display: flex; align-items: center; gap: 4px; }
+  .meta-chip i { font-size: 13px; }
+  .overdue { color: var(--red-text) !important; }
+  .card-actions { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
+
+  /* Detail panel */
+  .card-detail { display: none; border-top: 0.5px solid var(--border); padding: 1rem 1.25rem; background: var(--surface2); }
+  .card-detail.open { display: block; }
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem; }
+  .detail-block-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-3); font-weight: 500; margin-bottom: 4px; }
+  .detail-block-value { font-size: 13px; }
+  .detail-link { color: var(--text); text-decoration: underline; text-underline-offset: 3px; word-break: break-all; }
+  .detail-link:hover { color: var(--text-2); }
+  .section-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-3); font-weight: 500; margin-bottom: 8px; margin-top: 1rem; }
+  .status-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .status-pill {
+    padding: 5px 12px; border-radius: 20px; font-size: 12px;
+    font-family: 'DM Sans', sans-serif; border: 0.5px solid var(--border-strong);
+    background: transparent; color: var(--text-2); cursor: pointer; transition: all 0.1s;
+  }
+  .status-pill:hover { color: var(--text); }
+  .status-pill.active-submitted { background: var(--blue-bg); color: var(--blue-text); border-color: transparent; }
+  .status-pill.active-interviewing { background: var(--amber-bg); color: var(--amber-text); border-color: transparent; }
+  .status-pill.active-offer { background: var(--green-bg); color: var(--green-text); border-color: transparent; }
+  .status-pill.active-unsuccessful { background: var(--red-bg); color: var(--red-text); border-color: transparent; }
+  .status-pill.active-withdrawn { background: var(--gray-bg); color: var(--gray-text); border-color: transparent; }
+
+  textarea.notes-area {
+    width: 100%; min-height: 72px; padding: 9px 12px;
+    border: 0.5px solid var(--border-strong); border-radius: var(--radius);
+    background: var(--surface); color: var(--text);
+    font-family: 'DM Sans', sans-serif; font-size: 13px;
+    resize: vertical; outline: none; line-height: 1.5;
+  }
+  textarea.notes-area:focus { border-color: var(--text); }
+  textarea.notes-area::placeholder { color: var(--text-3); }
+
+  .history-list { display: flex; flex-direction: column; gap: 4px; }
+  .history-item { font-size: 12px; color: var(--text-2); display: flex; gap: 10px; }
+  .history-date { color: var(--text-3); min-width: 90px; }
+
+  .empty-state { text-align: center; padding: 4rem 2rem; color: var(--text-3); }
+  .empty-state i { font-size: 36px; margin-bottom: 1rem; display: block; }
+  .empty-state p { font-size: 14px; }
+  .empty-state strong { color: var(--text-2); }
+
+  /* Dialogs */
+  .dialog-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.4); z-index: 100;
+    align-items: center; justify-content: center;
+  }
+  .dialog-overlay.open { display: flex; }
+  .dialog {
+    background: var(--surface); border: 0.5px solid var(--border-strong);
+    border-radius: var(--radius-lg); padding: 1.5rem;
+    max-width: 400px; width: 90%;
+  }
+  .dialog h3 { font-size: 16px; font-weight: 500; margin-bottom: 8px; }
+  .dialog p { font-size: 13px; color: var(--text-2); margin-bottom: 1.25rem; }
+  .dialog-btns { display: flex; gap: 8px; justify-content: flex-end; }
+
+  @media (max-width: 500px) {
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .detail-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Config screen (first run) -->
+<div id="config-screen">
+  <div class="config-card">
+    <div class="config-logo">Job Tracker</div>
+    <h2>One-time setup</h2>
+    <p>Enter the URL of your Netlify proxy. This keeps your Anthropic API key secure — it never touches your browser.</p>
+    <label class="field-label" for="proxy-input">Netlify proxy URL</label>
+    <input type="url" class="text-input" id="proxy-input" placeholder="https://your-proxy.netlify.app/proxy" />
+    <p class="field-hint">From your Netlify project — looks like https://your-site-name.netlify.app/proxy</p>
+    <button class="btn btn-primary btn-full" onclick="saveConfig()">
+      Save and open tracker <i class="ti ti-arrow-right" aria-hidden="true"></i>
+    </button>
+  </div>
+</div>
+
+<!-- Main App -->
+<div id="app">
+  <div class="app-header">
+    <div>
+      <div class="app-logo">Job Tracker <span>Your applications, all in one place</span></div>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-sm btn-ghost" onclick="exportCSV()"><i class="ti ti-download" aria-hidden="true"></i> Export</button>
+      <button class="btn btn-sm btn-ghost" onclick="showSettings()"><i class="ti ti-settings" aria-hidden="true"></i></button>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-label">Total</div><div class="stat-value" id="stat-total">0</div></div>
+    <div class="stat"><div class="stat-label">Submitted</div><div class="stat-value" id="stat-submitted">0</div></div>
+    <div class="stat"><div class="stat-label">Interviewing</div><div class="stat-value" id="stat-interviewing">0</div></div>
+    <div class="stat"><div class="stat-label">Offers</div><div class="stat-value" id="stat-offer">0</div></div>
+  </div>
+
+  <div class="add-card">
+    <div class="add-row">
+      <input type="url" class="text-input" id="url-input" placeholder="Paste a job posting URL…" onkeydown="if(event.key==='Enter')addApplication()" />
+      <button class="btn btn-primary" onclick="addApplication()"><i class="ti ti-sparkles" aria-hidden="true"></i> Add</button>
+    </div>
+    <div class="meta-row">
+      <label>Source:</label>
+      <select id="source-select">
+        <option value="">Not specified</option>
+        <option>LinkedIn</option>
+        <option>Company website</option>
+        <option>Indeed</option>
+        <option>Glassdoor</option>
+        <option>Recruiter</option>
+        <option>Referral</option>
+        <option>Other</option>
+      </select>
+      <label style="margin-left:4px;">Chase by:</label>
+      <input type="date" id="followup-input" />
+    </div>
+    <div class="status-msg" id="status-msg">
+      <div class="spinner" id="status-spinner"></div>
+      <span id="status-text"></span>
+    </div>
+  </div>
+
+  <div class="filters">
+    <button class="filter-pill active" onclick="setFilter('all',this)">All</button>
+    <button class="filter-pill" onclick="setFilter('submitted',this)">Submitted</button>
+    <button class="filter-pill" onclick="setFilter('interviewing',this)">Interviewing</button>
+    <button class="filter-pill" onclick="setFilter('offer',this)">Offer</button>
+    <button class="filter-pill" onclick="setFilter('unsuccessful',this)">Unsuccessful</button>
+    <button class="filter-pill" onclick="setFilter('withdrawn',this)">Withdrawn</button>
+  </div>
+
+  <div class="apps-list" id="apps-list"></div>
+</div>
+
+<!-- Delete dialog -->
+<div class="dialog-overlay" id="delete-dialog">
+  <div class="dialog">
+    <h3>Delete application?</h3>
+    <p>This will permanently remove it from your tracker and cannot be undone.</p>
+    <div class="dialog-btns">
+      <button class="btn btn-sm" onclick="closeDialog()">Cancel</button>
+      <button class="btn btn-sm btn-primary" id="confirm-delete-btn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings dialog -->
+<div class="dialog-overlay" id="settings-dialog">
+  <div class="dialog" style="max-width:440px;">
+    <h3>Settings</h3>
+    <p>Update your Netlify proxy URL or clear all data.</p>
+    <label class="field-label">Netlify proxy URL</label>
+    <input type="url" class="text-input" id="settings-proxy" placeholder="https://your-proxy.netlify.app/proxy" />
+    <div class="dialog-btns">
+      <button class="btn btn-sm" onclick="closeDialog()">Cancel</button>
+      <button class="btn btn-sm" onclick="clearAllData()" style="color:var(--red-text);">Clear all data</button>
+      <button class="btn btn-sm btn-primary" onclick="saveSettingsProxy()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ─── CONFIGURATION ────────────────────────────────────────────
+  // Replace this with your Netlify proxy URL after deployment,
+  // OR leave blank and the app will ask on first run.
+  const PROXY_URL_DEFAULT = '';
+
+  // ─── State ────────────────────────────────────────────────────
+  let apps = [];
+  let currentFilter = 'all';
+  let openCard = null;
+  let pendingDeleteId = null;
+
+  // ─── Config helpers ───────────────────────────────────────────
+  function getProxyUrl() {
+    return PROXY_URL_DEFAULT || localStorage.getItem('jt_proxy') || '';
+  }
+  function saveConfig() {
+    const url = document.getElementById('proxy-input').value.trim();
+    if (!url.startsWith('https://')) {
+      alert('Please enter a valid https:// URL.');
+      return;
+    }
+    localStorage.setItem('jt_proxy', url);
+    init();
+  }
+  function saveSettingsProxy() {
+    const url = document.getElementById('settings-proxy').value.trim();
+    if (url && !url.startsWith('https://')) { alert('Please enter a valid https:// URL.'); return; }
+    if (url) localStorage.setItem('jt_proxy', url);
+    closeDialog();
+  }
+  function showSettings() {
+    document.getElementById('settings-proxy').value = getProxyUrl();
+    document.getElementById('settings-dialog').classList.add('open');
+  }
+  function clearAllData() {
+    if (!confirm('Delete ALL applications and settings? This cannot be undone.')) return;
+    localStorage.removeItem('jt_apps');
+    localStorage.removeItem('jt_proxy');
+    location.reload();
+  }
+
+  // ─── App data helpers ─────────────────────────────────────────
+  function loadApps() {
+    try { apps = JSON.parse(localStorage.getItem('jt_apps') || '[]'); } catch(e) { apps = []; }
+  }
+  function persistApps() { localStorage.setItem('jt_apps', JSON.stringify(apps)); }
+
+  // ─── Init ─────────────────────────────────────────────────────
+  function init() {
+    if (!getProxyUrl()) {
+      document.getElementById('config-screen').style.display = 'flex';
+      document.getElementById('app').style.display = 'none';
+    } else {
+      document.getElementById('config-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      loadApps();
+      render();
+    }
+  }
+
+  // ─── Dates ───────────────────────────────────────────────────
+  function today() { return new Date().toISOString().split('T')[0]; }
+  function fmt(d) {
+    if (!d) return '';
+    return new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+  }
+
+  // ─── Add application ──────────────────────────────────────────
+  async function addApplication() {
+    const url = document.getElementById('url-input').value.trim();
+    const source = document.getElementById('source-select').value;
+    const followup = document.getElementById('followup-input').value;
+
+    if (!url) { showMsg('Please paste a job URL.', true); return; }
+    if (!url.startsWith('http')) { showMsg('URL must start with http:// or https://', true); return; }
+
+    showMsg('Extracting job details with AI…', false, true);
+
+    let extracted = { title: '', company: '', reqNumber: '' };
+    try {
+      const prompt = `You are a job data extractor. The user has given you this job posting URL: ${url}
+
+Use your web search tool to visit this URL and extract:
+- Job title (exact wording)
+- Company name
+- Requisition / job ID number (if shown, else leave blank)
+
+Respond ONLY with a JSON object — no markdown fences, no explanation:
+{"title":"Senior Software Engineer","company":"Acme Corp","reqNumber":"REQ-12345"}
+
+If you cannot load the page, infer what you can from the URL itself. Always return valid JSON.`;
+
+      const resp = await fetch(getProxyUrl(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+          messages: [{ role: 'user', content: prompt }]
+        })
+      });
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        throw new Error(err.error?.message || `HTTP ${resp.status}`);
+      }
+
+      const data = await resp.json();
+      const textBlocks = (data.content || []).filter(b => b.type === 'text');
+      const raw = textBlocks.map(b => b.text).join('');
+      const clean = raw.replace(/```json|```/g, '').trim();
+      const match = clean.match(/\{[\s\S]*?\}/);
+      if (match) extracted = JSON.parse(match[0]);
+    } catch(e) {
+      showMsg('Could not extract details — added with URL only. (' + e.message + ')', true);
+      extracted = { title: 'Unknown role', company: extractDomain(url), reqNumber: '' };
+    }
+
+    showMsg('Opening archive.ph to snapshot the posting…', false, true);
+    window.open('https://archive.ph/submit/?url=' + encodeURIComponent(url), '_blank');
+
+    const app = {
+      id: Date.now().toString(),
+      url,
+      title: extracted.title || 'Unknown role',
+      company: extracted.company || extractDomain(url),
+      reqNumber: extracted.reqNumber || '',
+      source,
+      followupDate: followup,
+      status: 'submitted',
+      dateAdded: today(),
+      notes: '',
+      history: [{ date: today(), status: 'submitted' }]
+    };
+
+    apps.unshift(app);
+    persistApps();
+    document.getElementById('url-input').value = '';
+    document.getElementById('source-select').value = '';
+    document.getElementById('followup-input').value = '';
+    hideMsg();
+    render();
+  }
+
+  function extractDomain(url) {
+    try { return new URL(url).hostname.replace('www.', ''); } catch(e) { return url; }
+  }
+  function showMsg(text, isError, spinner) {
+    const el = document.getElementById('status-msg');
+    document.getElementById('status-text').textContent = text;
+    document.getElementById('status-spinner').style.display = spinner ? 'block' : 'none';
+    el.className = 'status-msg' + (isError ? ' error' : '');
+    el.style.display = 'flex';
+  }
+  function hideMsg() { document.getElementById('status-msg').style.display = 'none'; }
+
+  // ─── Filter ───────────────────────────────────────────────────
+  function setFilter(f, btn) {
+    currentFilter = f;
+    document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    render();
+  }
+
+  // ─── Status / Notes / Delete ──────────────────────────────────
+  function updateStatus(id, newStatus) {
+    const app = apps.find(a => a.id === id);
+    if (!app || app.status === newStatus) return;
+    app.status = newStatus;
+    app.history.push({ date: today(), status: newStatus });
+    persistApps();
+    render();
+  }
+  function saveNotes(id, notes) {
+    const app = apps.find(a => a.id === id);
+    if (!app) return;
+    app.notes = notes;
+    persistApps();
+  }
+  function confirmDelete(id) {
+    pendingDeleteId = id;
+    document.getElementById('delete-dialog').classList.add('open');
+    document.getElementById('confirm-delete-btn').onclick = () => {
+      apps = apps.filter(a => a.id !== pendingDeleteId);
+      persistApps();
+      if (openCard === pendingDeleteId) openCard = null;
+      closeDialog();
+      render();
+    };
+  }
+  function closeDialog() {
+    document.querySelectorAll('.dialog-overlay').forEach(d => d.classList.remove('open'));
+  }
+  function toggleCard(id) {
+    openCard = openCard === id ? null : id;
+    render();
+  }
+
+  // ─── Export ───────────────────────────────────────────────────
+  function exportCSV() {
+    const headers = ['Title','Company','Status','Date Added','Source','Follow-up Date','Req Number','URL','Notes'];
+    const rows = apps.map(a =>
+      [a.title,a.company,a.status,a.dateAdded,a.source,a.followupDate,a.reqNumber,a.url,a.notes]
+      .map(v => `"${(v||'').replace(/"/g,'""')}"`));
+    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csv], {type:'text/csv'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'job-applications-' + today() + '.csv';
+    a.click();
+  }
+
+  // ─── Render ───────────────────────────────────────────────────
+  function render() {
+    updateStats();
+    const list = document.getElementById('apps-list');
+    const filtered = currentFilter === 'all' ? apps : apps.filter(a => a.status === currentFilter);
+
+    if (filtered.length === 0) {
+      list.innerHTML = `<div class="empty-state">
+        <i class="ti ti-briefcase" aria-hidden="true"></i>
+        <p>${apps.length === 0
+          ? '<strong>No applications yet.</strong><br>Paste a job URL above to log your first one.'
+          : 'No applications match this filter.'}</p>
+      </div>`;
+      return;
+    }
+
+    const statuses = ['submitted','interviewing','offer','unsuccessful','withdrawn'];
+    const statusLabels = {submitted:'Submitted',interviewing:'Interviewing',offer:'Offer',unsuccessful:'Unsuccessful',withdrawn:'Withdrawn'};
+
+    list.innerHTML = filtered.map(app => {
+      const isOpen = openCard === app.id;
+      const overdue = app.followupDate && app.followupDate < today() && app.status === 'submitted';
+
+      const historyHtml = app.history.slice().reverse().map(h =>
+        `<div class="history-item"><span class="history-date">${fmt(h.date)}</span><span>→ ${statusLabels[h.status]||h.status}</span></div>`
+      ).join('');
+
+      return `<div class="app-card">
+        <div class="card-main">
+          <div class="card-body">
+            <div class="card-title">${esc(app.title)}</div>
+            <div class="card-company">${esc(app.company)}</div>
+            <div class="card-meta">
+              <span class="badge badge-${app.status}">${statusLabels[app.status]}</span>
+              <span class="meta-chip"><i class="ti ti-calendar" aria-hidden="true"></i>${fmt(app.dateAdded)}</span>
+              ${app.reqNumber ? `<span class="meta-chip"><i class="ti ti-hash" aria-hidden="true"></i>${esc(app.reqNumber)}</span>` : ''}
+              ${app.source ? `<span class="meta-chip"><i class="ti ti-map-pin" aria-hidden="true"></i>${esc(app.source)}</span>` : ''}
+              ${app.followupDate ? `<span class="meta-chip ${overdue?'overdue':''}"><i class="ti ti-clock" aria-hidden="true"></i>${fmt(app.followupDate)}${overdue?' ⚠':''}</span>` : ''}
+            </div>
+          </div>
+          <div class="card-actions">
+            <button class="btn btn-xs btn-ghost" onclick="toggleCard('${app.id}')" aria-label="${isOpen?'Collapse':'Expand'} details">
+              <i class="ti ti-chevron-${isOpen?'up':'down'}" aria-hidden="true"></i>
+            </button>
+            <button class="btn btn-xs btn-ghost" onclick="confirmDelete('${app.id}')" aria-label="Delete">
+              <i class="ti ti-trash" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+        <div class="card-detail ${isOpen?'open':''}">
+          <div class="detail-grid">
+            <div class="detail-block">
+              <div class="detail-block-label">Job URL</div>
+              <div class="detail-block-value"><a class="detail-link" href="${esc(app.url)}" target="_blank" rel="noopener">${esc(truncate(app.url,52))}</a></div>
+            </div>
+            <div class="detail-block">
+              <div class="detail-block-label">Archive</div>
+              <div class="detail-block-value"><a class="detail-link" href="https://archive.ph/${encodeURIComponent(app.url)}" target="_blank" rel="noopener">View on archive.ph</a></div>
+            </div>
+            ${app.reqNumber ? `<div class="detail-block"><div class="detail-block-label">Req number</div><div class="detail-block-value">${esc(app.reqNumber)}</div></div>` : ''}
+            ${app.source ? `<div class="detail-block"><div class="detail-block-label">Source</div><div class="detail-block-value">${esc(app.source)}</div></div>` : ''}
+            ${app.followupDate ? `<div class="detail-block"><div class="detail-block-label">Follow-up</div><div class="detail-block-value ${overdue?'overdue':''}">${fmt(app.followupDate)}${overdue?' ⚠':''}</div></div>` : ''}
+          </div>
+          <div class="section-label">Update status</div>
+          <div class="status-row">
+            ${statuses.map(s=>`<button class="status-pill ${app.status===s?'active-'+s:''}" onclick="updateStatus('${app.id}','${s}')">${statusLabels[s]}</button>`).join('')}
+          </div>
+          <div class="section-label">Notes</div>
+          <textarea class="notes-area" placeholder="Add notes about this application…" onblur="saveNotes('${app.id}',this.value)">${esc(app.notes)}</textarea>
+          <div class="section-label">History</div>
+          <div class="history-list">${historyHtml}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function updateStats() {
+    document.getElementById('stat-total').textContent = apps.length;
+    document.getElementById('stat-submitted').textContent = apps.filter(a=>a.status==='submitted').length;
+    document.getElementById('stat-interviewing').textContent = apps.filter(a=>a.status==='interviewing').length;
+    document.getElementById('stat-offer').textContent = apps.filter(a=>a.status==='offer').length;
+  }
+  function esc(s) {
+    if (!s) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function truncate(s,n) { return s&&s.length>n ? s.slice(0,n)+'…' : s; }
+
+  document.querySelectorAll('.dialog-overlay').forEach(el => {
+    el.addEventListener('click', e => { if (e.target===el) closeDialog(); });
+  });
+
+  init();
+</script>
+</body>
+</html>
