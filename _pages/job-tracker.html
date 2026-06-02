@@ -338,8 +338,8 @@ permalink: /job-tracker/
         <option>Referral</option>
         <option>Other</option>
       </select>
-      <label style="margin-left:4px;">Chase by:</label>
-      <input type="date" id="followup-input" />
+      <label style="margin-left:4px;">Submitted:</label>
+      <input type="date" id="date-input" />
     </div>
     <div class="status-msg" id="status-msg">
       <div class="spinner" id="status-spinner"></div>
@@ -444,6 +444,7 @@ permalink: /job-tracker/
       document.getElementById('app').style.display = 'block';
       loadApps();
       render();
+      document.getElementById('date-input').value = today();
     }
   }
 
@@ -458,7 +459,7 @@ permalink: /job-tracker/
   async function addApplication() {
     const url = document.getElementById('url-input').value.trim();
     const source = document.getElementById('source-select').value;
-    const followup = document.getElementById('followup-input').value;
+    const dateAdded = document.getElementById('date-input').value || today();
 
     if (!url) { showMsg('Please paste a job URL.', true); return; }
     if (!url.startsWith('http')) { showMsg('URL must start with http:// or https://', true); return; }
@@ -497,18 +498,17 @@ permalink: /job-tracker/
       company: extracted.company || extractDomain(url),
       reqNumber: extracted.reqNumber || '',
       source,
-      followupDate: followup,
       status: 'submitted',
-      dateAdded: today(),
+      dateAdded: dateAdded,
       notes: '',
-      history: [{ date: today(), status: 'submitted' }]
+      history: [{ date: dateAdded, status: 'submitted' }]
     };
 
     apps.unshift(app);
     persistApps();
     document.getElementById('url-input').value = '';
     document.getElementById('source-select').value = '';
-    document.getElementById('followup-input').value = '';
+    document.getElementById('date-input').value = today();
     hideMsg();
     render();
   }
@@ -569,9 +569,9 @@ permalink: /job-tracker/
 
   // ─── Export ───────────────────────────────────────────────────
   function exportCSV() {
-    const headers = ['Title','Company','Status','Date Added','Source','Follow-up Date','Req Number','URL','Notes'];
+    const headers = ['Title','Company','Status','Date Added','Source','Req Number','URL','Notes'];
     const rows = apps.map(a =>
-      [a.title,a.company,a.status,a.dateAdded,a.source,a.followupDate,a.reqNumber,a.url,a.notes]
+      [a.title,a.company,a.status,a.dateAdded,a.source,a.reqNumber,a.url,a.notes]
       .map(v => `"${(v||'').replace(/"/g,'""')}"`));
     const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
     const blob = new Blob([csv], {type:'text/csv'});
@@ -602,7 +602,6 @@ permalink: /job-tracker/
 
     list.innerHTML = filtered.map(app => {
       const isOpen = openCard === app.id;
-      const overdue = app.followupDate && app.followupDate < today() && app.status === 'submitted';
 
       const historyHtml = app.history.slice().reverse().map(h =>
         `<div class="history-item"><span class="history-date">${fmt(h.date)}</span><span>→ ${statusLabels[h.status]||h.status}</span></div>`
@@ -618,7 +617,6 @@ permalink: /job-tracker/
               <span class="meta-chip"><i class="ti ti-calendar" aria-hidden="true"></i>${fmt(app.dateAdded)}</span>
               ${app.reqNumber ? `<span class="meta-chip"><i class="ti ti-hash" aria-hidden="true"></i>${esc(app.reqNumber)}</span>` : ''}
               ${app.source ? `<span class="meta-chip"><i class="ti ti-map-pin" aria-hidden="true"></i>${esc(app.source)}</span>` : ''}
-              ${app.followupDate ? `<span class="meta-chip ${overdue?'overdue':''}"><i class="ti ti-clock" aria-hidden="true"></i>${fmt(app.followupDate)}${overdue?' ⚠':''}</span>` : ''}
             </div>
           </div>
           <div class="card-actions">
@@ -642,7 +640,7 @@ permalink: /job-tracker/
             </div>
             ${app.reqNumber ? `<div class="detail-block"><div class="detail-block-label">Req number</div><div class="detail-block-value">${esc(app.reqNumber)}</div></div>` : ''}
             ${app.source ? `<div class="detail-block"><div class="detail-block-label">Source</div><div class="detail-block-value">${esc(app.source)}</div></div>` : ''}
-            ${app.followupDate ? `<div class="detail-block"><div class="detail-block-label">Follow-up</div><div class="detail-block-value ${overdue?'overdue':''}">${fmt(app.followupDate)}${overdue?' ⚠':''}</div></div>` : ''}
+            
           </div>
           <div class="section-label">Update status</div>
           <div class="status-row">
