@@ -5,5 +5,5 @@ permalink: /random-art/
 
 Refresh the page to generate a new masterpiece!
 
-<canvas id="myCanvas" width="600" height="600"></canvas>
+<canvas id="myCanvas" style="display:block; max-width:100%;"></canvas>
 <script src="/assets/js/random_art.js"></script>
