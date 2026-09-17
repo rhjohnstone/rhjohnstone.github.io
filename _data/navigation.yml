@@ -3,5 +3,5 @@ main:
     url: /blog/
   - title: "Random art"
     url: /random-art/
-  - title: "Job tracker"
-    url: /job-tracker/
+  - title: "MolCVAE"
+    url: https://molcvae-d7w4ja9kd2ytzjhkjzdsgc.streamlit.app/
