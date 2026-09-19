@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script>
+        const targetUrl = "https://molcvae-d7w4ja9kd2ytzjhkjzdsgc.streamlit.app";
+        
+        // Dynamically create and insert the meta refresh tag
+        const meta = document.createElement('meta');
+        meta.httpEquiv = "refresh";
+        meta.content = "0; url=" + targetUrl;
+        document.getElementsByTagName('head')[0].appendChild(meta);
+
+        // Perform the immediate redirect
+        window.location.replace(targetUrl);
+    </script>
+    <title>Redirecting...</title>
+</head>
+<body>
+    <p>Redirecting to Streamlit app...</p>
+</body>
+</html>
