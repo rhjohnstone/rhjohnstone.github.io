@@ -5,3 +5,5 @@ main:
     url: /random-art/
   - title: "MolCVAE"
     url: https://molcvae-d7w4ja9kd2ytzjhkjzdsgc.streamlit.app/
+  - title: "Games"
+    url: https://rhjohnstone.itch.io/
